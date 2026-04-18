@@ -12,6 +12,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        // 1. ADMIN VIEW LOGIC
         if ($user->role === 'admin') {
             $adminStats = [
                 'total_suppliers'   => User::where('role', 'supplier')->count(),
@@ -30,16 +31,24 @@ class DashboardController extends Controller
 
             $recentActivity = Order::with('user')->latest()->take(5)->get();
 
+            // Variables are defined HERE, so compact works here
             return view('admin.dashboard', compact('adminStats', 'chartData', 'recentActivity'));
         }
 
+        // 2. SUPPLIER VIEW LOGIC
         $stats = [
-            'total_transmissions' => Order::where('user_id', $user->id)->count(),
-            'pending'             => Order::where('user_id', $user->id)->where('status', 'Pending')->count(),
-            'completed'           => Order::where('user_id', $user->id)->where('status', 'Delivered')->count(),
-            'recent_orders'       => Order::where('user_id', $user->id)->latest()->take(10)->get(),
+            'total'     => Order::where('user_id', $user->id)->count(),
+            'pending'   => Order::where('user_id', $user->id)->where('status', 'Pending')->count(),
+            'shipped'   => Order::where('user_id', $user->id)->where('status', 'Shipped')->count(),
+            'delivered' => Order::where('user_id', $user->id)->where('status', 'Delivered')->count(),
         ];
 
-        return view('supplier.dashboard', compact('stats'));
+        $recent_orders = Order::where('user_id', $user->id)
+            ->latest()
+            ->take(6)
+            ->get();
+
+        // Admin variables are NOT needed here, so we only compact supplier variables
+        return view('supplier.dashboard', compact('stats', 'recent_orders'));
     }
 }

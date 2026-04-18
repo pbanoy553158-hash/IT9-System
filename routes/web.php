@@ -4,65 +4,63 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\SupplierController;
+// Import the Admin Product Controller
+use App\Http\Controllers\Admin\ProductController as AdminProductController; 
 use App\Http\Controllers\Supplier\OrderController;
+use App\Http\Controllers\Supplier\ProductController;
+use App\Http\Controllers\Supplier\InvoiceController;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
-/**
- * CORE DASHBOARD
- * Unified route that handles redirection based on role via the Controller
- */
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    
-    /**
-     * USER PROFILE ROUTES
-     */
+    // User Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    /**
-     * ADMIN SECTION
-     * Prefix: /admin | Name: admin.*
-     */
+    // Admin Section
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', function () {
-            return redirect()->route('admin.suppliers.index');
-        });
-
-        // Supplier Management
+        Route::get('/', fn() => redirect()->route('admin.suppliers.index'));
+        
+        // Suppliers
         Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
         Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
         Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+        
+        // Products (Admin View + Approval Logic)
+        Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
+        Route::patch('/products/{product}/approve', [AdminProductController::class, 'approve'])->name('products.approve');
+        Route::patch('/products/{product}/reject', [AdminProductController::class, 'reject'])->name('products.reject');
+        Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
 
-        // Order Management (Admin View)
+        // Orders
         Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     });
 
-    /**
-     * SUPPLIER SECTION
-     * Prefix: /supplier | Name: supplier.*
-     */
+    // Supplier Section
     Route::prefix('supplier')->name('supplier.')->group(function () {
-        // Order Registry (The Index)
+        // Orders
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-        
-        // --- THE MISSING ROUTE ---
-        // This displays the Create Form (create.blade.php)
         Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
-        
-        // This handles the Form Submission
         Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-        
-        // Invoicing
-        Route::get('/invoices/{order}', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
+
+        // Products
+        Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+        Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+
+        // Invoices
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{order}', [InvoiceController::class, 'show'])->name('invoices.show');
     });
 });
 
