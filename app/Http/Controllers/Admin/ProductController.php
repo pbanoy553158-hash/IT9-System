@@ -4,63 +4,87 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Category;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    /**
-     * View all products from all suppliers.
-     * Includes filters for the status tabs (Pending, Active, etc.)
-     */
     public function index(Request $request)
     {
-        $query = Product::with(['user', 'category']); // 'user' represents the supplier here
+        $query = Product::with(['supplier', 'category']);
 
-        if ($request->has('status')) {
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
         $products = $query->latest()->paginate(15);
-        
         return view('admin.products.index', compact('products'));
     }
 
-    /**
-     * Show a specific product's details and supplier history.
-     */
+    // NEW: Show the form to create a product
+    public function create()
+    {
+        $categories = Category::all();
+        $suppliers = Supplier::all();
+        return view('admin.products.create', compact('categories', 'suppliers'));
+    }
+
+    // NEW: Save the product to the database
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'category_id' => 'required|exists:categories,id',
+            'sku' => 'required|unique:products,sku',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+
+        $data = $request->all();
+
+        // Handle Image Upload
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
+        // Set default status for Admin-created products
+        $data['status'] = 'Active';
+
+        Product::create($data);
+
+        return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
+    }
+
     public function show(Product $product)
     {
+        $product->load(['supplier', 'category']);
         return view('admin.products.show', compact('product'));
     }
 
-    /**
-     * Approve a supplier's product to make it visible in the system.
-     */
     public function approve(Product $product)
     {
-        $product->update(['status' => 'active']);
-        
-        return back()->with('success', "{$product->name} is now active.");
+        $product->update(['status' => 'Active']);
+        return back()->with('success', "{$product->name} has been approved.");
     }
 
-    /**
-     * Reject or Deactivate a product.
-     */
     public function reject(Product $product)
     {
-        $product->update(['status' => 'rejected']);
-        
+        $product->update(['status' => 'Rejected']);
         return back()->with('error', "{$product->name} has been rejected.");
     }
 
-    /**
-     * Remove a product from the system (Soft Delete).
-     */
     public function destroy(Product $product)
     {
-        $product->delete();
+        // Delete image file if it exists before soft deleting
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
         
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Product removed from catalog.');
+        $product->delete();
+        return redirect()->route('admin.products.index')->with('success', 'Product removed.');
     }
 }

@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>SupplyManager • Intelligent Ecosystem</title>
+    <title>SupplyManager • Ecosystem</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,134 +24,167 @@
             overflow: hidden;
         }
 
-        .app-shell {
-            display: flex;
-            height: 100vh;
-            width: 100vw;
-        }
+        .app-shell { display: flex; height: 100vh; width: 100vw; }
 
-        /* SIDEBAR: Enhanced Violet Glow */
         .sidebar-premium {
-            background: 
-                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-                linear-gradient(180deg, #12141c 0%, #08090d 100%);
-            border-right: 1px solid rgba(139, 92, 246, 0.15);
-            box-shadow: 10px 0 50px rgba(0,0,0,0.8);
-            z-index: 30;
+            background: linear-gradient(180deg, #0d0e14 0%, #030406 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 50;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* MAIN PANEL: Deeper Violet Accents */
         .main-content-area {
             background: 
-                radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.18) 0%, transparent 40%),
-                radial-gradient(circle at 0% 100%, rgba(99, 102, 241, 0.08) 0%, transparent 30%),
-                #050608;
+                radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                #08090d;
             position: relative;
-            z-index: 10;
         }
 
         .nav-link { 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            color: #94a3b8; 
-            border-radius: 12px; 
+            color: #64748b; 
+            border-radius: 16px;
             margin-bottom: 4px;
         }
-        
         .nav-link:hover { 
             color: #fff; 
-            background: rgba(139, 92, 246, 0.08); 
+            background: rgba(255, 255, 255, 0.03); 
             transform: translateX(4px);
         }
 
         .nav-active {
-            background: rgba(139, 92, 246, 0.15) !important;
-            color: #c4b5fd !important;
-            font-weight: 600;
-            box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.05);
+            background: rgba(99, 102, 241, 0.1) !important;
+            color: #a5b4fc !important;
+            font-weight: 700;
         }
 
         .glass-header {
-            background: rgba(5, 6, 8, 0.8);
+            background: rgba(8, 9, 13, 0.8);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
 
-        /* FIXED NOTIFICATION PORTAL */
-        .dropdown-portal {
-            position: fixed;
-            top: 80px;
-            right: 40px;
-            width: 360px;
-            background: rgba(13, 14, 20, 0.95);
-            backdrop-filter: blur(40px);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.1);
-            border-radius: 20px;
-            z-index: 9999 !important;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 
         .notif-dot {
             position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 8px;
-            height: 8px;
-            background: #a78bfa;
+            top: 7px;
+            right: 7px;
+            width: 7px;
+            height: 7px;
+            background: #6366f1;
             border-radius: 50%;
-            box-shadow: 0 0 12px #8b5cf6;
+            border: 2px solid #08090d;
         }
     </style>
 </head>
-<body class="antialiased" x-data="{ sidebarOpen: false, notificationsOpen: false }">
+<body class="antialiased" 
+      x-data="{ 
+          sidebarOpen: false, 
+          notificationsOpen: false 
+      }">
+
     <div class="app-shell">
         
+        {{-- SIDEBAR --}}
+        @php 
+            $isAdmin = Auth::user()->role === 'admin'; 
+            $sidebarWidth = $isAdmin ? 'w-72' : 'w-64'; 
+        @endphp
+
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-               class="sidebar-premium w-72 flex flex-col p-6 fixed inset-y-0 left-0 lg:static lg:h-full transition-transform duration-300">
+               class="sidebar-premium {{ $sidebarWidth }} flex flex-col p-6 lg:p-8 fixed inset-y-0 left-0 lg:static lg:h-full">
+
             <div class="flex flex-col h-full">
-                <div class="mb-12 px-2">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-                            <span class="text-xl">📦</span>
-                        </div>
-                        <h1 class="text-white font-bold text-xl tracking-tighter">Supply<span class="text-violet-400">Manager</span></h1>
+                {{-- Logo --}}
+                <div class="mb-12 px-1 flex items-center gap-3 group cursor-default">
+                    <div class="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:scale-105 transition-transform">
+                        <span class="text-2xl">📦</span>
+                    </div>
+                    <div>
+                        <h1 class="text-white font-bold text-[22px] tracking-tighter leading-none">
+                            Supply<span class="text-slate-400 font-medium">Manager</span>
+                        </h1>
                     </div>
                 </div>
 
-                <nav class="flex-1 space-y-1 overflow-y-auto pr-2">
-                    @php $isAdmin = Auth::user()->role === 'admin'; @endphp
-
-                    <a href="{{ route('dashboard') }}" class="nav-link flex items-center gap-3 px-4 py-3.5 text-sm {{ request()->routeIs('dashboard') ? 'nav-active' : '' }}">
-                        <span class="text-lg opacity-80">📊</span> Dashboard
-                    </a>
-
+                <nav class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                     @if($isAdmin)
-                        <a href="{{ route('admin.suppliers.index') }}" class="nav-link flex items-center gap-3 px-4 py-3.5 text-sm {{ request()->routeIs('admin.suppliers.*') ? 'nav-active' : '' }}">
-                            <span class="text-lg opacity-80">👥</span> Suppliers
+                        {{-- Admin Sidebar --}}
+                        <a href="{{ route('dashboard') }}" class="nav-link flex items-center gap-4 px-5 py-3.5 text-sm {{ request()->routeIs('dashboard') ? 'nav-active' : '' }}">
+                            <span class="text-2xl">🏠</span> 
+                            <span>Dashboard</span>
                         </a>
-                        <a href="#" class="nav-link flex items-center gap-3 px-4 py-3.5 text-sm">
-                            <span class="text-lg opacity-80">📦</span> Product inventory
+                        <a href="{{ route('admin.suppliers.index') }}" class="nav-link flex items-center gap-4 px-5 py-3.5 text-sm {{ request()->routeIs('admin.suppliers.*') ? 'nav-active' : '' }}">
+                            <span class="text-2xl">👥</span> 
+                            <span>Suppliers</span>
                         </a>
-                        <a href="{{ route('admin.orders.index') }}" class="nav-link flex items-center gap-3 px-4 py-3.5 text-sm {{ request()->routeIs('admin.orders.*') ? 'nav-active' : '' }}">
-                            <span class="text-lg opacity-80">📝</span> Order control
+                        <a href="{{ route('admin.products.index') }}" class="nav-link flex items-center gap-4 px-5 py-3.5 text-sm {{ request()->routeIs('admin.products.*') ? 'nav-active' : '' }}">
+                            <span class="text-2xl">📦</span> 
+                            <span>Inventory</span>
                         </a>
-                        <a href="#" class="nav-link flex items-center gap-3 px-4 py-3.5 text-sm">
-                            <span class="text-lg opacity-80">📈</span> System reports
+                        <a href="{{ route('admin.orders.index') }}" class="nav-link flex items-center gap-4 px-5 py-3.5 text-sm {{ request()->routeIs('admin.orders.*') ? 'nav-active' : '' }}">
+                            <span class="text-2xl">📝</span> 
+                            <span>Orders</span>
+                        </a>
+                        <a href="{{ route('admin.reports.index') }}" class="nav-link flex items-center gap-4 px-5 py-3.5 text-sm {{ request()->routeIs('admin.reports.*') ? 'nav-active' : '' }}">
+                            <span class="text-2xl">📊</span> 
+                            <span>Reports</span>
+                        </a>
+                    @else
+                        {{-- Supplier Sidebar - Compact --}}
+                        <a href="{{ route('dashboard') }}" class="nav-link flex items-center gap-3 px-4 py-3 text-sm {{ request()->routeIs('dashboard') ? 'nav-active' : '' }}">
+                            <span class="text-xl w-6">🏠</span> 
+                            <span class="font-medium">Dashboard</span>
+                        </a>
+                        <a href="{{ route('supplier.products.index') }}" class="nav-link flex items-center gap-3 px-4 py-3 text-sm {{ request()->routeIs('supplier.products.*') ? 'nav-active' : '' }}">
+                            <span class="text-xl w-6">📦</span> 
+                            <span class="font-medium">Products</span>
+                        </a>
+                        <a href="{{ route('supplier.orders.index') }}" class="nav-link flex items-center gap-3 px-4 py-3 text-sm {{ request()->routeIs('supplier.orders.*') ? 'nav-active' : '' }}">
+                            <span class="text-xl w-6">📝</span> 
+                            <span class="font-medium">Orders</span>
+                        </a>
+                        <a href="{{ route('supplier.invoices.index') }}" class="nav-link flex items-center gap-3 px-4 py-3 text-sm {{ request()->routeIs('supplier.invoices.*') ? 'nav-active' : '' }}">
+                            <span class="text-xl w-6">📄</span> 
+                            <span class="font-medium">Invoices</span>
                         </a>
                     @endif
 
-                    <a href="{{ route('profile.edit') }}" class="nav-link flex items-center gap-3 px-4 py-3.5 text-sm {{ request()->routeIs('profile.*') ? 'nav-active' : '' }}">
-                        <span class="text-lg opacity-80">⚙️</span> Settings
-                    </a>
+                    <div class="mt-10 pt-8 border-t border-white/5">
+                        <a href="{{ route('profile.edit') }}" class="nav-link flex items-center gap-3 px-4 py-3 text-sm {{ request()->routeIs('profile.*') ? 'nav-active' : '' }}">
+                            <span class="text-xl w-6">⚙️</span> 
+                            <span class="font-medium">Settings</span>
+                        </a>
+                    </div>
                 </nav>
 
-                <div class="mt-auto pt-6 border-t border-white/5">
-                    <div class="p-4 rounded-2xl bg-violet-500/5 border border-violet-500/10">
-                        <p class="text-xs font-bold text-white mb-0.5">{{ Auth::user()->name }}</p>
-                        <p class="text-[10px] text-violet-400/70 font-medium">Node: {{ Auth::user()->role }}</p>
-                        <form method="POST" action="{{ route('logout') }}" class="mt-4">
+                {{-- User Session Card --}}
+                <div class="mt-auto pt-8">
+                    <div class="p-5 rounded-3xl bg-white/[0.02] border border-white/5">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="relative">
+                                @if(Auth::user()->profile_photo_path)
+                                    <img src="/storage/{{ Auth::user()->profile_photo_path }}" 
+                                         class="w-9 h-9 rounded-2xl object-cover ring-1 ring-white/10">
+                                @else
+                                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-white text-sm">
+                                        {{ substr(Auth::user()->name, 0, 1) }}
+                                    </div>
+                                @endif
+                                <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#030406] rounded-full"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-white truncate">{{ Auth::user()->name }}</p>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ Auth::user()->role }}</p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button class="w-full py-2 text-[11px] font-bold text-slate-500 hover:text-violet-400 transition-colors">
-                                Disconnect
+                            <button type="submit"
+                                    class="w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-2xl text-xs font-medium transition-all border border-white/5">
+                                Sign out
                             </button>
                         </form>
                     </div>
@@ -159,31 +192,50 @@
             </div>
         </aside>
 
+        {{-- MAIN CONTENT --}}
         <div class="flex-1 flex flex-col overflow-hidden main-content-area">
-            <header class="h-20 flex items-center justify-between px-6 lg:px-12 glass-header shrink-0">
-                <div class="flex items-center gap-4">
-                    <button @click="sidebarOpen = true" class="lg:hidden text-slate-400 hover:text-violet-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            
+            <header class="h-20 flex items-center justify-between px-8 lg:px-12 glass-header shrink-0">
+                <div class="flex items-center gap-6">
+                    <button @click="sidebarOpen = !sidebarOpen" 
+                            class="lg:hidden p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/[0.05]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
                     </button>
-                    <h2 class="text-sm font-semibold text-slate-300">{{ $header ?? 'Ecosystem overview' }}</h2>
+                    <p class="text-lg font-semibold text-white tracking-tight">{{ $header ?? 'Dashboard' }}</p>
                 </div>
 
-                <div class="flex items-center gap-8">
-                    <button @click="notificationsOpen = !notificationsOpen" class="relative p-2 text-slate-400 hover:text-violet-400 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" stroke-linecap="round" stroke-linejoin="round"></path>
-                            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" stroke-linecap="round"></path>
+                <div class="flex items-center gap-6">
+                    {{-- Nice Bell Icon --}}
+                    <button @click="notificationsOpen = !notificationsOpen" 
+                            class="relative w-11 h-11 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:bg-white/[0.07] rounded-2xl group">
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                             class="w-6 h-6 transition-transform group-hover:scale-110" 
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                             viewBox="0 0 24 24">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
                         <span class="notif-dot"></span>
                     </button>
 
-                    <a href="{{ route('profile.edit') }}" class="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400 border border-violet-500/20 hover:border-violet-500/50 transition-all">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    {{-- Profile Icon --}}
+                    <a href="{{ route('profile.edit') }}" class="group">
+                        <div class="w-11 h-11 rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-indigo-400/60 transition-all bg-white/[0.06] shadow-inner">
+                            @if(Auth::user()->profile_photo_path)
+                                <img src="/storage/{{ Auth::user()->profile_photo_path }}" class="w-full h-full object-cover rounded-2xl">
+                            @else
+                                <div class="w-full h-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-violet-600 flex items-center justify-center text-white text-base font-bold">
+                                    {{ substr(Auth::user()->name, 0, 1) }}
+                                </div>
+                            @endif
+                        </div>
                     </a>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+            <main class="flex-1 overflow-y-auto p-8 lg:p-12 custom-scrollbar">
                 <div class="max-w-7xl mx-auto">
                     {{ $slot }}
                 </div>
@@ -191,26 +243,35 @@
         </div>
     </div>
 
+    {{-- Notification Panel --}}
     <div x-show="notificationsOpen" 
-         @click.away="notificationsOpen = false" 
+         @click.away="notificationsOpen = false"
          x-cloak
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
-         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-         class="dropdown-portal">
-        <div class="px-6 py-5 border-b border-white/5 bg-white/[0.02]">
-            <h3 class="text-xs font-bold text-white">System Activity</h3>
+         x-transition
+         class="fixed top-20 right-6 lg:right-10 w-80 bg-[#0d0e14]/95 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl z-[9999] overflow-hidden">
+
+        <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Notifications</span>
         </div>
-        <div class="max-h-96 overflow-y-auto">
-            <div class="px-6 py-5 hover:bg-violet-500/5 border-b border-white/5 transition-colors cursor-pointer group">
-                <p class="text-xs font-bold text-violet-300">Supplier update</p>
-                <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Inventory sync successful for Node-B.</p>
-                <p class="text-[9px] text-slate-600 mt-3 font-bold">Just now</p>
+        
+        <div class="max-h-[340px] overflow-y-auto custom-scrollbar p-3 space-y-1">
+            <div class="p-4 rounded-2xl hover:bg-white/[0.04] transition-all cursor-pointer">
+                <p class="text-sm font-semibold text-white">Your catalog is now live</p>
+                <p class="text-xs text-slate-500 mt-1">All products are visible to buyers.</p>
+                <p class="text-[10px] text-slate-600 mt-3">Just now</p>
+            </div>
+            
+            <div class="p-4 rounded-2xl hover:bg-white/[0.04] transition-all cursor-pointer">
+                <p class="text-sm font-semibold text-white">New order received #ORD-3921</p>
+                <p class="text-xs text-slate-500 mt-1">12 items • ₱48,750</p>
+                <p class="text-[10px] text-slate-600 mt-3">2 hours ago</p>
             </div>
         </div>
-        <div class="p-4">
-            <button class="w-full py-3 rounded-xl bg-white/[0.05] text-[10px] font-bold text-slate-400 hover:text-white transition-all">
-                Dismiss all
+
+        <div class="p-4 border-t border-white/5 bg-white/[0.015]">
+            <button @click="notificationsOpen = false"
+                    class="w-full py-3 text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl transition-colors">
+                Mark all as read
             </button>
         </div>
     </div>

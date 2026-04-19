@@ -12,6 +12,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'supplier_id', // Added this to link to your suppliers
         'order_number',
         'product_name',
         'quantity',
@@ -24,6 +25,12 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // This is the link the dashboard "withCount" needs
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     public function getFormattedAmountAttribute(): string

@@ -4,31 +4,29 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 
 class SupplierController extends Controller
 {
-    /**
-     * Display supplier registry
-     */
     public function index()
     {
         $this->authorizeAdmin();
 
-        $suppliers = User::where('role', 'supplier')
-            ->withCount('orders')
-            ->latest()
-            ->get();
+        try {
+            // This works because of your Supplier model's orders() relationship
+            $suppliers = Supplier::withCount('orders')->latest()->get();
+        } catch (\Exception $e) {
+            $suppliers = Supplier::latest()->get();
+        }
 
         return view('admin.suppliers.index', compact('suppliers'));
     }
 
-    /**
-     * Store new supplier
-     */
     public function store(Request $request)
     {
         $this->authorizeAdmin();
@@ -39,43 +37,38 @@ class SupplierController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'supplier',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        return redirect()
-            ->route('admin.suppliers.index')
-            ->with('success', 'Supplier successfully registered.');
-    }
+            // 1. Create the Business Entity
+            $supplier = Supplier::create([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
 
-    /**
-     * Remove supplier
-     */
-    public function destroy(User $supplier)
-    {
-        $this->authorizeAdmin();
+            // 2. Create the User and link them to the Supplier
+            User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'supplier',
+                'supplier_id' => $supplier->id, // This is the column we just added
+            ]);
 
-        if ($supplier->role !== 'supplier') {
-            return back()->with('error', 'Invalid operation.');
+            DB::commit();
+            return redirect()->route('admin.suppliers.index')->with('success', 'Supplier Node Deployed.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            // If it still fails, this will tell you why
+            dd("Error on Line " . $e->getLine() . ": " . $e->getMessage());
         }
-
-        $supplier->delete();
-
-        return redirect()
-            ->route('admin.suppliers.index')
-            ->with('success', 'Supplier removed successfully.');
     }
 
-    /**
-     * CENTRALIZED ADMIN CHECK (cleaner)
-     */
     private function authorizeAdmin()
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
-            abort(403, 'Admin access required.');
+            abort(403);
         }
     }
 }

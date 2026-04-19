@@ -2,45 +2,31 @@
 
 namespace App\Models;
 
-use App\Models\Order;
-use App\Models\Product;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-// ADD 'role' HERE so the Admin can save it
-#[Fillable(['name', 'email', 'password', 'role'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use Notifiable;
 
-    /**
-     * Relationship: A user (Supplier) has many products.
-     */
-    public function products(): HasMany
-    {
-        return $this->hasMany(Product::class);
-    }
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+        'supplier_id', // CRITICAL: Allows linking to the supplier
+    ];
 
-    /**
-     * Relationship: A user (Supplier) has many orders.
-     */
-    public function orders(): HasMany
+    protected $hidden = ['password', 'remember_token'];
+
+    public function supplier(): BelongsTo
     {
-        return $this->hasMany(Order::class);
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     protected function casts(): array
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed'
-        ];
+        return ['password' => 'hashed'];
     }
 }
