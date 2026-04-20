@@ -4,16 +4,13 @@
     <div class="py-6 px-4 sm:px-6 lg:px-8">
         <div class="max-w-5xl mx-auto space-y-6">
 
-            {{-- Back --}}
             <a href="{{ route('supplier.products.index') }}"
                class="text-xs text-indigo-400 hover:text-white">
                 ← Back to Inventory
             </a>
 
-            {{-- Main Card --}}
             <div class="bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex gap-6">
 
-                {{-- Image --}}
                 <div class="h-40 w-40 rounded-xl overflow-hidden bg-white/5 border border-white/10">
                     @if($product->image_path)
                         <img src="{{ asset('storage/' . $product->image_path) }}"
@@ -25,7 +22,6 @@
                     @endif
                 </div>
 
-                {{-- Info --}}
                 <div class="flex-1 space-y-2">
 
                     <h1 class="text-xl font-bold text-white">

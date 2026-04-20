@@ -6,13 +6,11 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Supplier;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // KPI STATS
         $adminStats = [
             'total_suppliers'   => Supplier::count(),
             'active_orders'     => Order::whereIn('status', ['Processing','Pending','Shipped'])->count(),
@@ -26,7 +24,7 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
-        // 🔥 FIXED WEEKLY ORDERS (MON → SUN REAL ALIGNMENT)
+        // WEEKLY ORDERS (MON–SUN)
         $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY);
 
         $weeklyOrders = [];
@@ -37,7 +35,6 @@ class DashboardController extends Controller
             $weeklyOrders[] = Order::whereDate('created_at', $date)->count();
         }
 
-        // 🔥 SYSTEM HEALTH (REAL DATA)
         $chartData = [
             Order::where('status','Delivered')->count(),
             Order::where('status','Pending')->count(),
@@ -50,5 +47,16 @@ class DashboardController extends Controller
             'weeklyOrders',
             'chartData'
         ));
+    }
+
+    
+    /*CLEAR RECENT ACTIVITY*/
+    public function clearActivity()
+    {
+        Order::query()->update([
+            'status' => 'Archived'
+        ]);
+
+        return back()->with('success', 'Activity cleared successfully.');
     }
 }

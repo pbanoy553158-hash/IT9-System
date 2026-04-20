@@ -1,81 +1,120 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center gap-3">
-            <span class="text-[#5046e5] font-semibold text-xs tracking-widest uppercase">Commerce</span>
+            <span class="text-[#5046e5] font-bold text-xs tracking-widest uppercase">Commerce</span>
             <span class="h-4 w-[1px] bg-white/10"></span>
-            <span class="text-white font-medium tracking-tight">Order Management</span>
+            <span class="text-white font-medium tracking-tight text-lg">Order Management</span>
         </div>
     </x-slot>
 
-    <div class="py-6 space-y-8">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6 bg-[#1b1931]/40 border border-white/5 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-            <div class="relative z-10">
-                <h1 class="text-white font-semibold text-3xl tracking-tighter">Recent Orders</h1>
-                <p class="text-slate-400 text-sm mt-2 font-medium">Monitor and manage active purchase requests across the network.</p>
+    <style>
+        .ocean-dark-panel {
+            background: linear-gradient(145deg, #171629 0%, #0d0b1a 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-text {
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .custom-select-dark {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 0.7em;
+        }
+
+        .row-glow:hover {
+            background: linear-gradient(90deg, rgba(80, 70, 229, 0.04) 0%, transparent 100%);
+        }
+    </style>
+
+    <div class="py-8 space-y-6 max-w-[1400px] mx-auto px-8">
+        
+        {{-- Header Section --}}
+        <div class="flex flex-col md:flex-row justify-between items-end gap-6 px-4">
+            <div>
+                <h1 class="text-white font-semibold text-2xl tracking-tighter leading-none">Recent Orders</h1>
+                <p class="text-slate-500 text-sm mt-2 italic font-medium">Monitor and manage active purchase requests across the network</p>
             </div>
             
-            <div class="flex items-center gap-4 relative z-10">
-                <span class="px-5 py-2.5 bg-[#5046e5]/10 text-[#5046e5] text-[11px] font-bold rounded-xl border border-[#5046e5]/20 flex items-center gap-2 uppercase tracking-wider">
-                    <div class="w-2 h-2 bg-[#5046e5] rounded-full animate-pulse shadow-[0_0_8px_rgba(80,70,229,0.8)]"></div>
-                    System Live
+            <div class="pb-1">
+                <span class="px-4 py-2 bg-[#5046e5]/10 text-[#5046e5] text-[11px] font-bold rounded-lg border border-[#5046e5]/20 flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 bg-[#5046e5] rounded-full animate-pulse shadow-[0_0_8px_rgba(80,70,229,0.8)]"></div>
+                    System Online
                 </span>
             </div>
         </div>
 
-        <div class="bg-[#1b1931] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden">
+        {{-- Main Data Table --}}
+        <div class="ocean-dark-panel rounded-[1.8rem] shadow-2xl overflow-hidden mt-2 mx-2">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-white/5 bg-white/[0.02]">
-                            <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Partner</th>
-                            <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Order ID</th>
-                            <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Product</th>
-                            <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Amount</th>
-                            <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
-                            <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Lifecycle Actions</th>
+                        <tr class="text-[12px] text-slate-500 border-b border-white/5 bg-white/[0.01] font-medium">
+                            <th class="px-7 py-4">Client Node</th>
+                            <th class="px-7 py-4">Asset Record</th>
+                            <th class="px-7 py-4 text-center">Lifecycle State</th>
+                            <th class="px-7 py-4 text-center">Valuation</th>
+                            <th class="px-7 py-4 text-right">Process Control</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
                         @forelse($orders as $order)
-                            <tr class="hover:bg-white/[0.01] transition-colors group">
-                                <td class="px-8 py-6">
+                            <tr class="row-glow transition-colors group">
+                                <td class="px-7 py-5">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-xl bg-[#0d0b1a] border border-white/5 flex items-center justify-center text-xs font-bold text-[#5046e5] group-hover:scale-105 transition-transform">
-                                            {{ substr($order->user->name ?? 'U', 0, 1) }}
+                                        <div class="w-9 h-9 rounded-lg bg-[#0d0b1a] border border-white/5 flex items-center justify-center text-[10px] font-black text-[#5046e5] group-hover:border-[#5046e5]/30 transition-all shadow-inner">
+                                            {{ strtoupper(substr($order->user->name ?? 'U', 0, 1)) }}
                                         </div>
-                                        <span class="text-sm font-semibold text-white">{{ $order->user->name ?? 'Unknown User' }}</span>
+                                        <div>
+                                            <div class="text-sm font-normal text-white group-hover:text-[#5046e5] transition-colors tracking-tight leading-tight">
+                                                {{ $order->user->name ?? 'Unknown User' }}
+                                            </div>
+                                            <div class="text-[9px] font-medium text-slate-500 mt-0.5 tracking-tight italic">Identity Verified</div>
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="px-8 py-6">
-                                    <span class="text-xs font-mono text-[#5046e5] bg-[#5046e5]/5 px-2 py-1 rounded-md">{{ $order->order_number }}</span>
+                                <td class="px-7 py-5">
+                                    <div class="text-sm font-semibold text-slate-200 leading-tight">{{ $order->product_name }}</div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-[9px] font-mono text-[#5046e5]/90 bg-[#5046e5]/10 px-1.5 py-0.5 rounded border border-[#5046e5]/10">{{ $order->order_number }}</span>
+                                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Qty: {{ $order->quantity }}</span>
+                                    </div>
                                 </td>
-                                <td class="px-8 py-6">
-                                    <div class="text-sm font-semibold text-slate-200">{{ $order->product_name }}</div>
-                                    <div class="text-[10px] text-slate-500 mt-0.5 font-medium">Quantity: {{ $order->quantity }}</div>
-                                </td>
-                                <td class="px-8 py-6 text-sm font-semibold text-white">
-                                    ₱{{ number_format($order->total_amount, 2) }}
-                                </td>
-                                <td class="px-8 py-6">
+                                <td class="px-7 py-5 text-center">
                                     @php
-                                        $statusClasses = [
-                                            'Pending'    => 'bg-amber-500/10 text-amber-500 border-amber-500/10',
-                                            'Processing' => 'bg-blue-500/10 text-blue-500 border-blue-500/10',
-                                            'Shipped'    => 'bg-indigo-500/10 text-indigo-500 border-indigo-500/10',
-                                            'Delivered'  => 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10',
-                                            'Rejected'   => 'bg-rose-500/10 text-rose-500 border-rose-500/10',
-                                        ][$order->status] ?? 'bg-slate-500/10 text-slate-400 border-white/5';
+                                        $statusColor = [
+                                            'Pending'    => 'text-amber-400',
+                                            'Processing' => 'text-blue-400',
+                                            'Shipped'    => 'text-indigo-400',
+                                            'Delivered'  => 'text-emerald-400',
+                                            'Rejected'   => 'text-rose-500',
+                                        ][$order->status] ?? 'text-slate-400';
                                     @endphp
-                                    <span class="px-3 py-1 text-[10px] font-bold border rounded-lg uppercase tracking-wider {{ $statusClasses }}">
+                                    <span class="status-text {{ $statusColor }} tracking-tight">
+                                        <span class="w-1 h-1 rounded-full bg-current opacity-70"></span>
                                         {{ $order->status }}
                                     </span>
                                 </td>
-                                <td class="px-8 py-6 text-right">
+                                <td class="px-7 py-5 text-center">
+
+                                    <span class="text-xs font-semibold text-emerald-400 tracking-tight">
+                                        ₱{{ number_format($order->total_amount, 2) }}
+                                    </span>
+                                </td>
+                                <td class="px-7 py-5 text-right">
                                     <form action="{{ route('admin.orders.updateStatus', $order->id) }}" method="POST" class="inline">
                                         @csrf
                                         @method('PATCH')
                                         <select name="status" onchange="this.form.submit()" 
-                                            class="bg-[#0d0b1a] border border-white/10 hover:border-[#5046e5]/50 rounded-xl text-[11px] font-bold py-2 pl-4 pr-9 text-slate-300 focus:ring-0 focus:outline-none cursor-pointer transition-all appearance-none">
+                                            class="custom-select-dark bg-[#080712] border border-white/10 hover:border-[#5046e5]/50 rounded-lg text-[10px] font-semibold py-1.5 pl-3 pr-8 text-slate-300 focus:ring-0 focus:outline-none cursor-pointer transition-all tracking-tight">
                                             @foreach(['Pending', 'Processing', 'Shipped', 'Delivered', 'Rejected'] as $status)
                                                 <option value="{{ $status }}" {{ $order->status == $status ? 'selected' : '' }}>
                                                     {{ $status }}
@@ -87,9 +126,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-8 py-24 text-center">
-                                    <div class="text-4xl mb-4 opacity-20">📦</div>
-                                    <p class="text-slate-500 font-medium">No order history available</p>
+                                <td colspan="5" class="py-20 text-center">
+                                    <p class="text-slate-600 text-[11px] italic font-medium">No active records detected in network stream</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -98,14 +136,12 @@
             </div>
 
             @if($orders->hasPages())
-                <div class="px-8 py-6 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
-                    <div class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-                        Entry {{ $orders->firstItem() }} — {{ $orders->lastItem() }} 
-                        <span class="mx-2 text-white/10">|</span>
-                        Total {{ $orders->total() }}
+                <div class="px-7 py-5 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
+                    <div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                        Network Capacity: {{ $orders->total() }} Units
                     </div>
                     
-                    <div class="pagination-custom">
+                    <div class="pagination-custom text-[10px]">
                         {{ $orders->links() }}
                     </div>
                 </div>

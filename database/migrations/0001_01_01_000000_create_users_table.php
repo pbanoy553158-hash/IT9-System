@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            // Role-based access control [cite: 29]
+
             $table->enum('role', ['admin', 'supplier'])->default('supplier'); 
             $table->rememberToken();
             $table->timestamps();
@@ -38,9 +38,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');

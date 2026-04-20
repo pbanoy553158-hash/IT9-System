@@ -12,10 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
-        // Register your custom AdminMiddleware
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            // You can add more aliases here later if needed
         ]);
 
     })

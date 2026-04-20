@@ -6,14 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $blueprint) {
-            // Check if columns exist before adding them to prevent errors
-            if (!Schema::hasColumn('orders', 'priority')) {
+
+        if (!Schema::hasColumn('orders', 'priority')) {
                 $blueprint->string('priority')->default('standard')->after('quantity');
             }
             if (!Schema::hasColumn('orders', 'notes')) {
@@ -25,9 +23,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {

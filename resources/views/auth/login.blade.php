@@ -54,12 +54,10 @@
             </p>
         </div>
 
-        {{-- FORM --}}
         <div class="vault-card rounded-[2rem] p-8 shadow-2xl">
             <form method="POST" action="{{ route('login') }}" class="space-y-6">
                 @csrf
 
-                {{-- EMAIL --}}
                 <div class="space-y-2">
                     <label class="block text-[11px] font-semibold text-slate-400 ml-1">
                         Email address
@@ -70,7 +68,6 @@
                         placeholder="name@company.com">
                 </div>
 
-                {{-- PASSWORD --}}
                 <div class="space-y-2">
                     <div class="flex justify-between items-center ml-1">
                         <label class="text-[11px] font-semibold text-slate-400">
@@ -90,7 +87,6 @@
                         placeholder="••••••••">
                 </div>
 
-                {{-- REMEMBER --}}
                 <div class="flex items-center px-1">
                     <input type="checkbox" name="remember"
                         class="rounded bg-white/5 border-white/10 text-indigo-600 w-4 h-4">
@@ -100,7 +96,6 @@
                     </span>
                 </div>
 
-                {{-- BUTTON --}}
                 <button type="submit"
                     class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold normal-case tracking-normal transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]">
                     Authorize Access

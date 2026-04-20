@@ -4,156 +4,203 @@
     <div class="py-6 px-4 sm:px-6 lg:px-8 antialiased">
         <div class="max-w-7xl mx-auto space-y-6">
 
-            {{-- HEADER (MATCH PRODUCTS STYLE) --}}
+            {{-- HEADER --}}
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-xl font-extrabold text-white tracking-tight">Order Log</h1>
-                    <p class="text-[11px] text-slate-500 font-medium tracking-wide">
-                        Live supplier transactions
-                    </p>
+                    <h1 class="text-xl font-extrabold text-white">Order Log</h1>
+                    <p class="text-[11px] text-slate-500">Live supplier transactions</p>
                 </div>
 
                 <a href="{{ route('supplier.orders.create') }}"
                    class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-lg font-bold">
-                    New Order
+                    + New Order
                 </a>
             </div>
 
-            {{-- FILTER BAR (MATCH PRODUCTS STYLE) --}}
-            <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/[0.02] border border-white/5 p-4 rounded-2xl backdrop-blur-sm">
-
-                <form method="GET" class="flex flex-1 flex-col md:flex-row gap-3 w-full">
-
+            <div class="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+                <form method="GET" class="flex gap-3">
                     <select name="status"
-                        class="bg-[#0d0d12] border border-white/10 rounded-xl px-4 py-2 text-[11px] text-slate-400 outline-none focus:border-indigo-500/50 transition-all cursor-pointer min-w-[180px]">
-
+                        class="bg-[#0b0b10] border border-white/10 text-white text-xs rounded-xl px-4 py-2">
                         <option value="">All Status</option>
-                        <option>Pending</option>
-                        <option>Processing</option>
-                        <option>Shipped</option>
-                        <option>Delivered</option>
-                        <option>Rejected</option>
+                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="Processing" {{ request('status') == 'Processing' ? 'selected' : '' }}>Processing</option>
+                        <option value="Shipped" {{ request('status') == 'Shipped' ? 'selected' : '' }}>Shipped</option>
+                        <option value="Delivered" {{ request('status') == 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                        <option value="Rejected" {{ request('status') == 'Rejected' ? 'selected' : '' }}>Rejected</option>
                     </select>
 
                     <button type="submit"
-                        class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white uppercase tracking-widest transition-all">
+                        class="bg-white/5 px-4 py-2 text-xs text-white rounded-xl hover:bg-white/10">
                         Filter
                     </button>
-
                 </form>
             </div>
 
-            {{-- PREMIUM GLASS TABLE (MATCH PRODUCTS STYLE) --}}
-            <div class="bg-white/[0.02] border border-white/5 rounded-[1.5rem] shadow-2xl backdrop-blur-md overflow-hidden">
+            <div class="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden">
 
-                <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
-                    <h3 class="text-sm font-bold text-white tracking-tight">Order Records</h3>
-                    <span class="text-[10px] text-slate-500 font-mono">
-                        Total Orders: {{ $orders->count() }}
-                    </span>
+                <div class="p-4 border-b border-white/5 flex justify-between items-center">
+                    <div class="text-white font-bold text-sm">Orders</div>
+                    <div class="text-slate-500 text-xs">Total: {{ $orders->total() }}</div>
                 </div>
 
                 <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
 
-                    <table class="w-full">
-
-                        <thead>
-                            <tr class="bg-white/[0.01]">
-                                <th class="px-6 py-4 text-left text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                    Product Info
-                                </th>
-
-                                <th class="px-6 py-4 text-center text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                    Status
-                                </th>
-
-                                <th class="px-6 py-4 text-right text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                    Amount
-                                </th>
-
-                                <th class="px-6 py-4 text-right text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                    Date
-                                </th>
+                        <thead class="text-[10px] text-slate-500 uppercase bg-white/5">
+                            <tr>
+                                <th class="text-left px-6 py-3">Product</th>
+                                <th class="text-center px-6 py-3">Status</th>
+                                <th class="text-right px-6 py-3">Amount</th>
+                                <th class="text-right px-6 py-3">Action</th>
                             </tr>
                         </thead>
 
                         <tbody class="divide-y divide-white/5">
 
                             @forelse($orders as $order)
-                            <tr class="hover:bg-white/[0.03] transition-all group">
 
-                                {{-- PRODUCT INFO --}}
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-4">
+                                @php
+                                    $item = $order->items->first();
+                                    $product = $item?->product;
+                                @endphp
 
-                                        {{-- optional product image --}}
-                                        <div class="h-10 w-10 rounded-xl bg-white/5 border border-white/10 overflow-hidden flex-shrink-0 group-hover:border-indigo-500/30 transition-colors">
-                                            @if($order->product_image ?? false)
-                                                <img src="{{ asset('storage/' . $order->product_image) }}"
-                                                     class="h-full w-full object-cover">
-                                            @else
-                                                <div class="h-full w-full flex items-center justify-center text-slate-700">
-                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                                    </svg>
+                                <tr class="hover:bg-white/5 transition">
+
+                                    <td class="px-6 py-3">
+                                        <div class="flex items-center gap-3">
+
+                                            <div class="h-12 w-12 rounded-lg overflow-hidden bg-black border border-white/10 flex-shrink-0">
+                                                @if($product && $product->image_path)
+                                                    <img src="{{ asset('storage/'.$product->image_path) }}"
+                                                         class="w-full h-full object-cover">
+                                                @else
+                                                    <div class="flex items-center justify-center h-full text-[9px] text-slate-600">
+                                                        No Img
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <div class="text-white font-semibold text-xs truncate">
+                                                    {{ $product->name ?? 'Unknown Product' }}
                                                 </div>
-                                            @endif
-                                        </div>
-
-                                        <div>
-                                            <div class="font-bold text-white group-hover:text-indigo-300 text-[13px] transition-colors">
-                                                {{ $order->product_name }}
+                                                <div class="text-[10px] text-indigo-400 font-mono">
+                                                    {{ $order->order_number }}
+                                                </div>
                                             </div>
 
-                                            <div class="text-[9px] font-mono text-indigo-400 font-bold uppercase tracking-wider">
-                                                {{ $order->order_number }}
-                                            </div>
                                         </div>
+                                    </td>
 
-                                    </div>
-                                </td>
+                                    <td class="text-center px-6 py-3">
+                                        <span class="text-[10px] px-2 py-1 rounded-full
+                                            @if($order->status=='Pending') bg-yellow-500/10 text-yellow-400
+                                            @elseif($order->status=='Processing') bg-blue-500/10 text-blue-400
+                                            @elseif($order->status=='Shipped') bg-indigo-500/10 text-indigo-400
+                                            @elseif($order->status=='Delivered') bg-green-500/10 text-green-400
+                                            @else bg-red-500/10 text-red-400 @endif">
+                                            {{ $order->status }}
+                                        </span>
+                                    </td>
 
-                                {{-- STATUS --}}
-                                <td class="px-6 py-4 text-center">
-                                    <span class="text-[10px] font-bold uppercase px-3 py-1 rounded-full border
-                                        @if($order->status == 'Pending') bg-amber-500/10 text-amber-400 border-amber-500/20
-                                        @elseif($order->status == 'Processing') bg-blue-500/10 text-blue-400 border-blue-500/20
-                                        @elseif($order->status == 'Shipped') bg-indigo-500/10 text-indigo-400 border-indigo-500/20
-                                        @elseif($order->status == 'Delivered') bg-emerald-500/10 text-emerald-400 border-emerald-500/20
-                                        @else bg-red-500/10 text-red-400 border-red-500/20
-                                        @endif">
-                                        {{ $order->status }}
-                                    </span>
-                                </td>
+                                    <td class="text-right px-6 py-3 text-white font-bold text-xs">
+                                        ₱{{ number_format($order->total_amount, 2) }}
+                                    </td>
 
-                                {{-- AMOUNT --}}
-                                <td class="px-6 py-4 text-right font-black text-white text-sm">
-                                    ₱{{ number_format($order->total_amount, 2) }}
-                                </td>
+                                    <td class="text-right px-6 py-3">
+                                        <button onclick="openModal(
+                                            @js($product->name ?? 'Unknown Product'),
+                                            @js($order->order_number),
+                                            {{ $order->quantity }},
+                                            {{ $order->total_amount }},
+                                            @js($order->status),
+                                            @js($product->image_path ?? null)
+                                        )"
+                                            class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1 text-[10px] rounded-lg transition">
+                                            View
+                                        </button>
+                                    </td>
 
-                                {{-- DATE --}}
-                                <td class="px-6 py-4 text-right text-[10px] text-slate-500">
-                                    {{ $order->created_at->format('M d, Y') }}
-                                </td>
+                                </tr>
 
-                            </tr>
                             @empty
-                            <tr>
-                                <td colspan="4" class="py-20 text-center">
-                                    <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                                <tr>
+                                    <td colspan="4" class="text-center py-16 text-slate-500 text-xs">
                                         No orders found
-                                    </span>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
                             @endforelse
 
                         </tbody>
-
                     </table>
-
                 </div>
+
+                <div class="p-4 border-t border-white/5">
+                    {{ $orders->links() }}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL (SMALLER WIDTH FIX) --}}
+    <div id="modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+
+        <div class="bg-[#0b0b10] w-[420px] p-6 rounded-xl border border-white/10">
+
+            {{-- IMAGE --}}
+            <div class="flex justify-center mb-4">
+                <div class="h-64 w-64 bg-black border border-white/10 rounded-xl overflow-hidden shadow-lg">
+                    <img id="m_image" class="w-full h-full object-cover">
+                </div>
+            </div>
+
+            {{-- INFO --}}
+            <h2 id="m_name" class="text-white font-bold text-sm text-center"></h2>
+
+            <div class="text-indigo-400 text-[11px] text-center mb-1">
+                Order #: <span id="m_order"></span>
+            </div>
+
+            <div class="text-slate-400 text-[11px] text-center mb-1">
+                Quantity: <span id="m_qty"></span>
+            </div>
+
+            <div class="text-slate-400 text-[11px] text-center mb-1">
+                Status: <span id="m_status"></span>
+            </div>
+
+            <div class="text-white text-center font-bold mt-2">
+                ₱<span id="m_total"></span>
+            </div>
+
+            <div class="flex justify-center mt-5">
+                <button onclick="closeModal()"
+                    class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-lg text-xs text-white font-bold">
+                    Close
+                </button>
             </div>
 
         </div>
     </div>
+
+    <script>
+        function openModal(name, order, qty, total, status, image) {
+            document.getElementById('modal').classList.remove('hidden');
+
+            document.getElementById('m_name').innerText = name;
+            document.getElementById('m_order').innerText = order;
+            document.getElementById('m_qty').innerText = qty;
+            document.getElementById('m_total').innerText = parseFloat(total).toFixed(2);
+            document.getElementById('m_status').innerText = status;
+
+            const img = document.getElementById('m_image');
+            img.src = image ? "/storage/" + image : "";
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+    </script>
+
 </x-app-layout>

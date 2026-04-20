@@ -34,9 +34,6 @@ class SupplierController extends Controller
         return view('admin.suppliers.index', compact('suppliers'));
     }
 
-    /**
-     * Store supplier + user account
-     */
     public function store(Request $request)
     {
         $this->authorizeAdmin();
@@ -50,13 +47,11 @@ class SupplierController extends Controller
         DB::beginTransaction();
 
         try {
-            // Create supplier
             $supplier = Supplier::create([
                 'name' => $request->name,
                 'email' => $request->email,
             ]);
 
-            // Create linked user
             User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -72,7 +67,6 @@ class SupplierController extends Controller
                 ->with('success', 'Supplier account created successfully.');
 
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             return back()
@@ -81,9 +75,68 @@ class SupplierController extends Controller
         }
     }
 
-    /**
-     * Delete supplier + linked user
-     */
+    public function edit(Supplier $supplier)
+    {
+        $this->authorizeAdmin();
+        return view('admin.suppliers.edit', compact('supplier'));
+    }
+
+    public function update(Request $request, Supplier $supplier)
+    {
+        $this->authorizeAdmin();
+
+        $user = User::where('supplier_id', $supplier->id)->first();
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                'unique:users,email,' . ($user?->id ?? 'NULL'),
+            ],
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $supplier->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
+
+            if ($user) {
+                $user->update([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                ]);
+
+                if ($request->filled('password')) {
+                    $request->validate([
+                        'password' => ['confirmed', Rules\Password::defaults()]
+                    ]);
+
+                    $user->update([
+                        'password' => Hash::make($request->password)
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.suppliers.index')
+                ->with('success', 'Supplier updated successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()
+                ->withErrors(['error' => 'Update failed.'])
+                ->withInput();
+        }
+    }
+
     public function destroy(Supplier $supplier)
     {
         $this->authorizeAdmin();
@@ -101,7 +154,6 @@ class SupplierController extends Controller
                 ->with('success', 'Supplier removed successfully.');
 
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             return back()->withErrors([
@@ -110,9 +162,6 @@ class SupplierController extends Controller
         }
     }
 
-    /**
-     * Admin access protection
-     */
     private function authorizeAdmin()
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {

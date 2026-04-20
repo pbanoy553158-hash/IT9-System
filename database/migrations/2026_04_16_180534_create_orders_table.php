@@ -13,7 +13,6 @@ return new class extends Migration
 
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            // Supplier link (IMPORTANT FIX)
             $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('cascade');
 
             $table->string('order_number')->unique();

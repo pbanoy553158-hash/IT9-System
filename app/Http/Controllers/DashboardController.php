@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Order;
+use App\Models\Activity;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -12,34 +14,49 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. ADMIN VIEW LOGIC
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN DASHBOARD
+        |--------------------------------------------------------------------------
+        */
         if ($user->role === 'admin') {
+
             $adminStats = [
-                'total_suppliers'   => User::where('role', 'supplier')->count(),
-                'active_orders'     => Order::whereIn('status', ['Processing', 'Shipped'])->count(),
+                'total_suppliers' => User::where('role', 'supplier')->count(),
+                'active_orders' => Order::count(),
                 'pending_approvals' => Order::where('status', 'Pending')->count(),
-                'total_revenue'     => Order::where('status', 'Delivered')->sum('total_amount'),
             ];
+
+            $recentActivity = Order::with('user')
+                ->latest()
+                ->take(10)
+                ->get();
+
+            $weeklyOrders = [4, 10, 8, 15, 12, 18, 22];
 
             $chartData = [
-                'Pending'    => Order::where('status', 'Pending')->count(),
-                'Processing' => Order::where('status', 'Processing')->count(),
-                'Shipped'    => Order::where('status', 'Shipped')->count(),
-                'Delivered'  => Order::where('status', 'Delivered')->count(),
-                'Rejected'   => Order::where('status', 'Rejected')->count(),
+                Order::where('status', 'Pending')->count(),
+                Order::where('status', 'Processing')->count(),
+                Order::where('status', 'Delivered')->count(),
             ];
 
-            $recentActivity = Order::with('user')->latest()->take(5)->get();
-
-            // Variables are defined HERE, so compact works here
-            return view('admin.dashboard', compact('adminStats', 'chartData', 'recentActivity'));
+            return view('admin.dashboard', compact(
+                'adminStats',
+                'recentActivity',
+                'weeklyOrders',
+                'chartData'
+            ));
         }
 
-        // 2. SUPPLIER VIEW LOGIC
+        /*
+        |--------------------------------------------------------------------------
+        | SUPPLIER DASHBOARD
+        |--------------------------------------------------------------------------
+        */
         $stats = [
-            'total'     => Order::where('user_id', $user->id)->count(),
-            'pending'   => Order::where('user_id', $user->id)->where('status', 'Pending')->count(),
-            'shipped'   => Order::where('user_id', $user->id)->where('status', 'Shipped')->count(),
+            'total' => Order::where('user_id', $user->id)->count(),
+            'pending' => Order::where('user_id', $user->id)->where('status', 'Pending')->count(),
+            'shipped' => Order::where('user_id', $user->id)->where('status', 'Shipped')->count(),
             'delivered' => Order::where('user_id', $user->id)->where('status', 'Delivered')->count(),
         ];
 
@@ -48,7 +65,15 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
-        // Admin variables are NOT needed here, so we only compact supplier variables
-        return view('supplier.dashboard', compact('stats', 'recent_orders'));
+        $activities = Activity::where('user_id', $user->id)
+            ->latest()
+            ->take(10)
+            ->get();
+
+        return view('supplier.dashboard', compact(
+            'stats',
+            'recent_orders',
+            'activities'
+        ));
     }
 }

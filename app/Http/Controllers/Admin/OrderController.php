@@ -13,10 +13,6 @@ use Illuminate\Validation\Rules;
 
 class SupplierController extends Controller
 {
-    /**
-     * Display supplier directory
-     * Shows correct delivered order count
-     */
     public function index()
     {
         $this->authorizeAdmin();
@@ -35,9 +31,6 @@ class SupplierController extends Controller
         return view('admin.suppliers.index', compact('suppliers'));
     }
 
-    /**
-     * Store supplier + user account
-     */
     public function store(Request $request)
     {
         $this->authorizeAdmin();
@@ -81,9 +74,6 @@ class SupplierController extends Controller
         }
     }
 
-    /**
-     * Delete supplier + user
-     */
     public function destroy(Supplier $supplier)
     {
         $this->authorizeAdmin();

@@ -23,7 +23,6 @@ class ProductController extends Controller
         return view('admin.products.index', compact('products'));
     }
 
-    // NEW: Show the form to create a product
     public function create()
     {
         $categories = Category::all();
@@ -31,7 +30,6 @@ class ProductController extends Controller
         return view('admin.products.create', compact('categories', 'suppliers'));
     }
 
-    // NEW: Save the product to the database
     public function store(Request $request)
     {
         $request->validate([
@@ -46,12 +44,10 @@ class ProductController extends Controller
 
         $data = $request->all();
 
-        // Handle Image Upload
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        // Set default status for Admin-created products
         $data['status'] = 'Active';
 
         Product::create($data);
@@ -79,7 +75,6 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        // Delete image file if it exists before soft deleting
         if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }

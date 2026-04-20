@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Supplier;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Activity; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -12,15 +13,16 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    /**
-     * INDEX - Inventory list
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | INDEX
+    |--------------------------------------------------------------------------
+    */
     public function index(Request $request)
     {
         $query = Product::where('supplier_id', Auth::user()->supplier_id)
             ->with('category');
 
-        // SEARCH
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -29,7 +31,6 @@ class ProductController extends Controller
             });
         }
 
-        // FILTER CATEGORY
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
@@ -40,12 +41,13 @@ class ProductController extends Controller
         return view('supplier.products.index', compact('products', 'categories'));
     }
 
-    /**
-     * SHOW - VIEW SINGLE PRODUCT (🔥 ADDED)
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW
+    |--------------------------------------------------------------------------
+    */
     public function show(Product $product)
     {
-        // Security: ensure supplier owns product
         if ($product->supplier_id !== Auth::user()->supplier_id) {
             abort(403);
         }
@@ -55,18 +57,22 @@ class ProductController extends Controller
         return view('supplier.products.show', compact('product'));
     }
 
-    /**
-     * CREATE
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | CREATE
+    |--------------------------------------------------------------------------
+    */
     public function create()
     {
         $categories = Category::orderBy('name')->get();
         return view('supplier.products.create', compact('categories'));
     }
 
-    /**
-     * STORE
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | STORE
+    |--------------------------------------------------------------------------
+    */
     public function store(Request $request)
     {
         $request->validate([
@@ -86,7 +92,7 @@ class ProductController extends Controller
 
         $sku = strtoupper(Str::slug($request->name)) . '-' . strtoupper(Str::random(5));
 
-        Product::create([
+        $product = Product::create([
             'supplier_id' => Auth::user()->supplier_id,
             'category_id' => $request->category_id,
             'name'        => $request->name,
@@ -98,13 +104,23 @@ class ProductController extends Controller
             'image_path'  => $imagePath,
         ]);
 
+        Activity::create([
+            'user_id'     => Auth::id(),
+            'type'        => 'product',
+            'title'       => 'Product Added',
+            'description' => "Product {$product->name} was added to inventory.",
+            'status'      => 'Active',
+        ]);
+
         return redirect()->route('supplier.products.index')
             ->with('success', 'Asset successfully deployed to inventory.');
     }
 
-    /**
-     * EDIT
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | EDIT
+    |--------------------------------------------------------------------------
+    */
     public function edit(Product $product)
     {
         if ($product->supplier_id !== Auth::user()->supplier_id) {
@@ -116,9 +132,11 @@ class ProductController extends Controller
         return view('supplier.products.edit', compact('product', 'categories'));
     }
 
-    /**
-     * UPDATE
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE
+    |--------------------------------------------------------------------------
+    */
     public function update(Request $request, Product $product)
     {
         if ($product->supplier_id !== Auth::user()->supplier_id) {
@@ -146,24 +164,39 @@ class ProductController extends Controller
 
         $product->update($request->except('product_image'));
 
+        Activity::create([
+            'user_id'     => Auth::id(),
+            'type'        => 'product',
+            'title'       => 'Product Updated',
+            'description' => "Product {$product->name} was updated.",
+            'status'      => $request->status,
+        ]);
+
         return redirect()->route('supplier.products.index')
             ->with('success', 'Product information updated successfully.');
     }
 
-    /**
-     * DESTROY
-     */
     public function destroy(Product $product)
     {
         if ($product->supplier_id !== Auth::user()->supplier_id) {
             abort(403);
         }
 
+        $name = $product->name;
+
         if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }
 
         $product->delete();
+
+        Activity::create([
+            'user_id'     => Auth::id(),
+            'type'        => 'product',
+            'title'       => 'Product Removed',
+            'description' => "Product {$name} was removed from inventory.",
+            'status'      => 'Deleted',
+        ]);
 
         return redirect()->route('supplier.products.index')
             ->with('success', 'Asset decommissioned and removed from system.');

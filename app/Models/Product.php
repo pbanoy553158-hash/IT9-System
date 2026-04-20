@@ -22,17 +22,11 @@ class Product extends Model
         'image_path'
     ];
 
-    /**
-     * Relationship: A product belongs to a supplier.
-     */
     public function supplier()
     {
         return $this->belongsTo(\App\Models\Supplier::class, 'supplier_id');
     }
 
-    /**
-     * Relationship: A product belongs to a category.
-     */
     public function category()
     {
         return $this->belongsTo(\App\Models\Category::class);

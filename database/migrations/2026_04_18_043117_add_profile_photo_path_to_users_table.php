@@ -6,13 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+ 
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // This stores the path to your violet-themed profile pic
             $table->string('profile_photo_path', 2048)->nullable()->after('email');
         });
     }

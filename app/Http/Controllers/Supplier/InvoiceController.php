@@ -9,14 +9,10 @@ use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
-    /**
-     * Display list of supplier's invoices with improved UI
-     */
     public function index(Request $request)
     {
         $query = Order::where('user_id', Auth::id())->latest();
 
-        // Simple search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -30,9 +26,6 @@ class InvoiceController extends Controller
         return view('supplier.invoices.index', compact('orders'));
     }
 
-    /**
-     * Show single invoice
-     */
     public function show(Order $order)
     {
         if ($order->user_id !== Auth::id()) {
