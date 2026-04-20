@@ -10,13 +10,18 @@ use Illuminate\Support\Facades\Auth;
 class OrderController extends Controller
 {
     /**
-     * Show supplier orders (only current logged-in supplier)
+     * Show supplier orders (WITH STATUS FILTER FIX)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::where('user_id', Auth::id())
-            ->latest()
-            ->paginate(10);
+        $query = Order::where('user_id', Auth::id());
+
+        // ✅ STATUS FILTER ADDED
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $orders = $query->latest()->paginate(10);
 
         return view('supplier.orders.index', compact('orders'));
     }
@@ -30,7 +35,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Store new order (FIXED: supplier_id properly linked)
+     * Store new order
      */
     public function store(Request $request)
     {
@@ -44,8 +49,6 @@ class OrderController extends Controller
 
         Order::create([
             'user_id' => Auth::id(),
-
-            // 🔥 THIS IS THE MOST IMPORTANT FIX
             'supplier_id' => Auth::user()->supplier_id,
 
             'product_name' => $request->product_name,
@@ -53,10 +56,7 @@ class OrderController extends Controller
             'priority'     => $request->priority,
             'notes'        => $request->notes,
 
-            // auto compute total
             'total_amount' => $request->quantity * $request->unit_price,
-
-            // default status
             'status' => 'Pending',
         ]);
 

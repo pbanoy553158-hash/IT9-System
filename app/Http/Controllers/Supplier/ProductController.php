@@ -13,42 +13,59 @@ use Illuminate\Support\Str;
 class ProductController extends Controller
 {
     /**
-     * 1. INDEX: Displays the inventory list with Search and Filter
+     * INDEX - Inventory list
      */
     public function index(Request $request)
     {
         $query = Product::where('supplier_id', Auth::user()->supplier_id)
             ->with('category');
 
+        // SEARCH
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                   ->orWhere('sku', 'LIKE', "%{$search}%");
             });
         }
 
+        // FILTER CATEGORY
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
 
         $products = $query->latest()->get();
-        $categories = Category::orderBy('name', 'asc')->get();
+        $categories = Category::orderBy('name')->get();
 
         return view('supplier.products.index', compact('products', 'categories'));
     }
 
     /**
-     * 2. CREATE: Shows the registration form
+     * SHOW - VIEW SINGLE PRODUCT (🔥 ADDED)
+     */
+    public function show(Product $product)
+    {
+        // Security: ensure supplier owns product
+        if ($product->supplier_id !== Auth::user()->supplier_id) {
+            abort(403);
+        }
+
+        $product->load('category');
+
+        return view('supplier.products.show', compact('product'));
+    }
+
+    /**
+     * CREATE
      */
     public function create()
     {
-        $categories = Category::orderBy('name', 'asc')->get();
+        $categories = Category::orderBy('name')->get();
         return view('supplier.products.create', compact('categories'));
     }
 
     /**
-     * 3. STORE: Saves new products with auto-generated SKU
+     * STORE
      */
     public function store(Request $request)
     {
@@ -62,6 +79,7 @@ class ProductController extends Controller
         ]);
 
         $imagePath = null;
+
         if ($request->hasFile('product_image')) {
             $imagePath = $request->file('product_image')->store('products', 'public');
         }
@@ -80,11 +98,12 @@ class ProductController extends Controller
             'image_path'  => $imagePath,
         ]);
 
-        return redirect()->route('supplier.products.index')->with('success', 'Asset successfully deployed to inventory.');
+        return redirect()->route('supplier.products.index')
+            ->with('success', 'Asset successfully deployed to inventory.');
     }
 
     /**
-     * 4. EDIT: Shows the update form
+     * EDIT
      */
     public function edit(Product $product)
     {
@@ -92,12 +111,13 @@ class ProductController extends Controller
             abort(403);
         }
 
-        $categories = Category::orderBy('name', 'asc')->get();
+        $categories = Category::orderBy('name')->get();
+
         return view('supplier.products.edit', compact('product', 'categories'));
     }
 
     /**
-     * 5. UPDATE: Saves changes to existing products
+     * UPDATE
      */
     public function update(Request $request, Product $product)
     {
@@ -119,25 +139,26 @@ class ProductController extends Controller
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
-            $product->image_path = $request->file('product_image')->store('products', 'public');
+
+            $product->image_path = $request->file('product_image')
+                ->store('products', 'public');
         }
 
         $product->update($request->except('product_image'));
 
-        return redirect()->route('supplier.products.index')->with('success', 'Product information updated successfully.');
+        return redirect()->route('supplier.products.index')
+            ->with('success', 'Product information updated successfully.');
     }
 
     /**
-     * 6. DESTROY: Deletes the product and cleans up files
+     * DESTROY
      */
     public function destroy(Product $product)
     {
-        // Security check
         if ($product->supplier_id !== Auth::user()->supplier_id) {
             abort(403);
         }
 
-        // Delete image file from storage if it exists
         if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }
