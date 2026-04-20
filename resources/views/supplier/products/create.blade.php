@@ -53,7 +53,7 @@
                                     {{-- Name --}}
                                     <div class="space-y-1.5">
                                         <label class="block text-xs font-semibold text-slate-400 ml-1">Asset Name</label>
-                                        <input type="text" name="name" required placeholder="e.g. Copper Wire, Canned Goods..."
+                                        <input type="text" name="name" required spellcheck="false" placeholder="e.g. Copper Wire, Canned Goods..."
                                                class="w-full rounded-xl bg-white/[0.03] border border-white/5 text-[13px] text-white px-4 py-2.5 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all">
                                     </div>
 
@@ -63,7 +63,6 @@
                                         <div class="relative group">
                                             <select name="category_id" required class="w-full rounded-xl bg-white/[0.03] border border-white/5 text-[13px] text-white px-4 py-2.5 focus:border-indigo-500/50 outline-none appearance-none cursor-pointer">
                                                 <option value="" disabled selected class="bg-[#11101d]">Select Sector</option>
-                                                {{-- Ensure these are added to your categories table --}}
                                                 @foreach($categories as $category)
                                                     <option value="{{ $category->id }}" class="bg-[#11101d]">{{ $category->name }}</option>
                                                 @endforeach
@@ -74,7 +73,7 @@
                                         </div>
                                     </div>
 
-                                    {{-- Pricing & Stock --}}
+                                    {{-- Pricing & Units --}}
                                     <div class="grid grid-cols-2 gap-3">
                                         <div class="space-y-1.5">
                                             <label class="block text-xs font-semibold text-slate-400 ml-1">Price (₱)</label>
@@ -92,6 +91,7 @@
                                         </div>
                                     </div>
 
+                                    {{-- Stock --}}
                                     <div class="space-y-1.5">
                                         <label class="block text-xs font-semibold text-slate-400 ml-1">Initial Stock Level</label>
                                         <input type="number" name="stock" required placeholder="0"

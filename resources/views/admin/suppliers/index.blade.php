@@ -1,206 +1,207 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center gap-3">
-            <span class="text-[#5046e5] font-semibold text-xs tracking-widest uppercase">Network</span>
+            <span class="text-[#5046e5] font-semibold text-xs tracking-widest">Network</span>
             <span class="h-4 w-[1px] bg-white/10"></span>
-            <span class="text-white font-medium tracking-tight">Partner Distribution Portal</span>
+            <span class="text-white font-medium tracking-tight">
+                Partner Distribution Portal
+            </span>
         </div>
     </x-slot>
 
     <style>
         .btn-primary-violet {
             background: #5046e5;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px 0 rgba(80, 70, 229, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(80, 70, 229, 0.25);
         }
+
         .btn-primary-violet:hover {
             background: #4338ca;
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px 0 rgba(80, 70, 229, 0.4);
+            box-shadow: 0 8px 25px rgba(80, 70, 229, 0.35);
         }
 
         .supplier-card {
-            background: linear-gradient(145deg, rgba(27, 25, 49, 0.6) 0%, rgba(13, 11, 26, 0.8) 100%);
-            transition: all 0.4s ease;
+            background: linear-gradient(145deg, rgba(27,25,49,0.65), rgba(13,11,26,0.85));
+            transition: all 0.3s ease;
         }
 
         .supplier-card:hover {
-            border-color: rgba(80, 70, 229, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
+            transform: translateY(-3px);
+            border-color: rgba(80,70,229,0.35);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
 
         dialog::backdrop {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
         }
     </style>
 
-    <div class="py-6 space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="py-8 space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {{-- HEADER (UNCHANGED) --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#1b1931]/40 border border-white/5 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        {{-- Notifications --}}
+        @if ($errors->any())
+            <div class="bg-red-500/10 border border-red-500/20 rounded-2xl p-4">
+                <p class="text-red-400 text-xs font-medium mb-2">Please review the following errors:</p>
+                <ul class="text-xs text-red-300 space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>• {{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-            <div class="absolute inset-0 bg-gradient-to-r from-[#5046e5]/5 to-transparent pointer-events-none"></div>
+        @if(session('success'))
+            <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4">
+                <p class="text-emerald-300 text-xs font-medium">
+                    {{ session('success') }}
+                </p>
+            </div>
+        @endif
 
-            <div class="relative z-10">
-                <h1 class="text-white font-semibold text-3xl tracking-tighter">Supplier Infrastructure</h1>
-
-                <div class="mt-3 flex items-center">
-                    <span class="flex items-center gap-2 px-3 py-1 bg-[#5046e5]/10 border border-[#5046e5]/20 rounded-full">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#818cf8] opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5046e5]"></span>
-                        </span>
-                        <span class="text-slate-400 text-xs font-medium tracking-tight">
-                            Active Authorized Partners:
-                        </span>
-                        <span class="text-[#818cf8] text-xs font-bold ml-1">
-                            {{ $suppliers->count() }}
-                        </span>
-                    </span>
-                </div>
+        {{-- Header --}}
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#1b1931]/40 border border-white/5 p-8 rounded-3xl">
+            <div>
+                <h1 class="text-white text-2xl font-semibold tracking-tight">
+                    Supplier Management
+                </h1>
+                <p class="text-slate-400 text-xs mt-2">
+                    Manage verified supplier accounts and onboarding requests
+                </p>
             </div>
 
             <button onclick="document.getElementById('onboardModal').showModal()"
-                class="btn-primary-violet px-6 py-3.5 text-white rounded-xl font-bold text-xs tracking-wide transition-all active:scale-95 relative z-10 flex items-center gap-2">
-
-                <span class="opacity-70 font-normal text-lg leading-none">+</span>
-                Add Supplier
+                class="btn-primary-violet px-6 py-3 rounded-xl text-white text-xs font-semibold tracking-wide">
+                Add New Supplier
             </button>
-
         </div>
 
-        {{-- GRID --}}
+        {{-- Supplier Grid --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
-            {{-- ✅ IMPROVED SUPPLIER CARD --}}
             @forelse($suppliers as $supplier)
-        <div class="supplier-card group border border-white/5 rounded-xl p-4 relative overflow-hidden">
+                <div class="supplier-card relative border border-white/5 rounded-2xl p-5">
 
-            {{-- subtle controlled accent (very minimal now) --}}
-            <div class="absolute -right-10 -top-10 w-28 h-28 bg-[#5046e5]/5 blur-2xl"></div>
+                    <form method="POST"
+                          action="{{ route('admin.suppliers.destroy', $supplier->id) }}"
+                          class="absolute top-4 right-4">
 
-            <div class="relative z-10 flex flex-col gap-4">
+                        @csrf
+                        @method('DELETE')
 
-                {{-- HEADER --}}
-                <div class="flex items-center justify-between">
+                        <button type="submit"
+                            onclick="return confirm('Delete this supplier permanently?')"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition">
+                            🗑
+                        </button>
+                    </form>
 
-                    <div class="flex items-center gap-3 min-w-0">
-
-                        <div class="w-9 h-9 rounded-lg bg-[#0d0b1a] border border-[#5046e5]/20 flex items-center justify-center">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-10 h-10 rounded-xl bg-[#0d0b1a] border border-[#5046e5]/20 flex items-center justify-center">
                             <span class="text-[#818cf8] font-semibold text-xs">
                                 {{ strtoupper(substr($supplier->name, 0, 1)) }}
                             </span>
                         </div>
 
-                        <div class="min-w-0">
-                            <h4 class="text-white font-medium text-sm truncate">
+                        <div>
+                            <h4 class="text-white font-medium text-sm">
                                 {{ $supplier->name }}
                             </h4>
-                            <p class="text-[10px] text-slate-500 truncate">
+                            <p class="text-slate-500 text-[11px]">
                                 {{ $supplier->email }}
                             </p>
                         </div>
-
                     </div>
 
-                    {{-- status --}}
-                    <span class="text-[9px] px-2 py-0.5 rounded-md bg-[#5046e5]/10 text-[#818cf8] border border-[#5046e5]/10 uppercase tracking-widest font-semibold">
-                        Active
-                    </span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                            <p class="text-[10px] text-slate-500">Total Orders</p>
+                            <p class="text-lg text-white font-semibold mt-1">
+                                {{ $supplier->orders_count ?? 0 }}
+                            </p>
+                        </div>
 
-                </div>
-
-                {{-- STATS --}}
-                <div class="grid grid-cols-2 gap-3">
-
-                    <div class="bg-white/[0.02] border border-white/5 rounded-lg p-3">
-                        <p class="text-[9px] text-slate-500 uppercase tracking-widest">Orders</p>
-                        <p class="text-lg font-semibold text-white mt-1">
-                            {{ $supplier->orders_count ?? 0 }}
-                        </p>
+                        <div class="bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                            <p class="text-[10px] text-slate-500">Supplier ID</p>
+                            <p class="text-lg text-[#818cf8] font-semibold mt-1">
+                                #{{ str_pad($supplier->id, 3, '0', STR_PAD_LEFT) }}
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="bg-white/[0.02] border border-white/5 rounded-lg p-3">
-                        <p class="text-[9px] text-slate-500 uppercase tracking-widest">ID</p>
-                        <p class="text-lg font-semibold text-[#818cf8] mt-1">
-                            #{{ str_pad($supplier->id, 3, '0', STR_PAD_LEFT) }}
-                        </p>
+                    <div class="mt-4 pt-3 border-t border-white/5 flex justify-between text-[10px] text-slate-500">
+                        <span>Status: Active</span>
+                        <span>{{ $supplier->created_at->format('M Y') }}</span>
                     </div>
 
                 </div>
-
-                {{-- FOOTER --}}
-                <div class="flex items-center justify-between pt-2 border-t border-white/5">
-
-                    <div class="flex items-center gap-2">
-                        <div class="w-1 h-1 rounded-full bg-[#5046e5]"></div>
-                        <span class="text-[9px] text-slate-500 uppercase tracking-widest">
-                            Sync OK
-                        </span>
-                    </div>
-
-                    <span class="text-[9px] text-slate-600">
-                        {{ $supplier->created_at->format('M Y') }}
-                    </span>
-
+            @empty
+                <div class="col-span-full text-center py-16 text-slate-500 text-xs">
+                    No suppliers have been registered yet.
                 </div>
+            @endforelse
 
-            </div>
         </div>
+    </div>
 
-        @empty
+    {{-- MODAL WITH CLOSE X --}}
+    <dialog id="onboardModal" class="bg-[#0d0f14] border border-white/10 rounded-3xl w-full max-w-md p-8 relative">
 
-        <div class="col-span-full py-16 text-center border border-dashed border-white/10 rounded-xl bg-[#0d0b1a]/40">
-            <p class="text-slate-600 text-xs uppercase tracking-widest">
-                No supplier records found
-            </p>
-        </div>
+        {{-- Top Right Close Button --}}
+        <button type="button"
+            onclick="document.getElementById('onboardModal').close()"
+            class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition">
 
-        @endforelse
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="w-4 h-4"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke="currentColor"
+                 stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
 
-    {{-- MODAL (UNCHANGED) --}}
-    <dialog id="onboardModal" class="bg-[#0d0f14] border border-white/10 p-0 rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden outline-none">
+        <h3 class="text-white text-xl font-semibold mb-6">
+            Supplier Onboarding
+        </h3>
 
-        <div class="p-10">
+        <form method="POST" action="{{ route('admin.suppliers.store') }}" class="space-y-4">
+            @csrf
 
-            <div class="flex justify-between items-start mb-8">
-                <div>
-                    <h3 class="text-white font-bold text-2xl tracking-tighter">Onboard Supplier</h3>
-                    <p class="text-slate-500 text-sm mt-1 font-medium">Initialize new authorized partner node.</p>
-                </div>
-
-                <button onclick="document.getElementById('onboardModal').close()"
-                        class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-slate-500 hover:text-white transition-all hover:bg-white/10">
-                    ×
-                </button>
+            <div>
+                <label class="text-xs text-slate-400">Company Name</label>
+                <input type="text" name="name"
+                       class="w-full mt-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm"
+                       placeholder="Enter company name">
             </div>
 
-            <form action="{{ route('admin.suppliers.store') }}" method="POST" class="space-y-6">
-                @csrf
+            <div>
+                <label class="text-xs text-slate-400">Email Address</label>
+                <input type="email" name="email"
+                       class="w-full mt-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm"
+                       placeholder="company@email.com">
+            </div>
 
-                <div class="space-y-5">
+            <div>
+                <label class="text-xs text-slate-400">Password</label>
+                <input type="password" name="password"
+                       class="w-full mt-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm">
+            </div>
 
-                    <input type="text" name="name" required
-                        class="w-full bg-white/[0.03] border border-white/10 rounded-xl px-5 py-4 text-sm text-white"
-                        placeholder="Supplier Name">
+            <div>
+                <label class="text-xs text-slate-400">Confirm Password</label>
+                <input type="password" name="password_confirmation"
+                       class="w-full mt-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm">
+            </div>
 
-                    <input type="email" name="email" required
-                        class="w-full bg-white/[0.03] border border-white/10 rounded-xl px-5 py-4 text-sm text-white"
-                        placeholder="Email">
-
-                </div>
-
-                <button type="submit"
-                        class="btn-primary-violet w-full text-white py-4 rounded-xl text-sm font-bold tracking-wide">
-                    Deploy Supplier Node
-                </button>
-
-            </form>
-
-        </div>
+            <button type="submit"
+                    class="btn-primary-violet w-full py-3 rounded-xl text-white text-sm font-semibold mt-2">
+                Create Supplier Account
+            </button>
+        </form>
 
     </dialog>
-
 </x-app-layout>

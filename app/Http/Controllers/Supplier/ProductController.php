@@ -8,139 +8,136 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
-class ProductController extends Controller 
+class ProductController extends Controller
 {
     /**
-     * Display the inventory list with search and low stock logic.
+     * 1. INDEX: Displays the inventory list with Search and Filter
      */
-    public function index(Request $request) 
+    public function index(Request $request)
     {
-        // Get the supplier ID (Fallback to 1 for testing if user is not linked)
-        $supplierId = Auth::user()->supplier_id ?? 1;
+        $query = Product::where('supplier_id', Auth::user()->supplier_id)
+            ->with('category');
 
-        $query = Product::where('supplier_id', $supplierId);
-
-        // Filter by name or SKU if searching
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('sku', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('sku', 'LIKE', "%{$search}%");
             });
         }
 
-        // Load categories to display names in the table
-        $products = $query->with('category')->latest()->paginate(10);
-        
-        return view('supplier.products.index', compact('products'));
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        $products = $query->latest()->get();
+        $categories = Category::orderBy('name', 'asc')->get();
+
+        return view('supplier.products.index', compact('products', 'categories'));
     }
 
     /**
-     * Show the form to register a new asset.
+     * 2. CREATE: Shows the registration form
      */
-    public function create() 
+    public function create()
     {
-        $categories = Category::all();
+        $categories = Category::orderBy('name', 'asc')->get();
         return view('supplier.products.create', compact('categories'));
     }
 
     /**
-     * Store the asset and handle image processing.
+     * 3. STORE: Saves new products with auto-generated SKU
      */
-    public function store(Request $request) 
+    public function store(Request $request)
     {
-        // 1. Validation
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'unit' => 'required|string',
-            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
+            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        // 2. Handle Image Upload to 'public/products'
         $imagePath = null;
         if ($request->hasFile('product_image')) {
             $imagePath = $request->file('product_image')->store('products', 'public');
         }
 
-        // 3. Set the Supplier ID (Prevents the 'null' vanish error)
-        $supplierId = Auth::user()->supplier_id ?? 1;
+        $sku = strtoupper(Str::slug($request->name)) . '-' . strtoupper(Str::random(5));
 
-        // 4. Create the Record
         Product::create([
-            'supplier_id' => $supplierId,
+            'supplier_id' => Auth::user()->supplier_id,
             'category_id' => $request->category_id,
-            'name' => $request->name,
-            'sku' => 'PRD-' . strtoupper(bin2hex(random_bytes(3))), // e.g., PRD-F3A2B1
-            'price' => $request->price,
-            'stock' => $request->stock,
-            'unit' => $request->unit,
-            'status' => 'Pending',
-            'image_path' => $imagePath,
+            'name'        => $request->name,
+            'sku'         => $sku,
+            'price'       => $request->price,
+            'stock'       => $request->stock,
+            'unit'        => $request->unit,
+            'status'      => 'Active',
+            'image_path'  => $imagePath,
         ]);
 
-        return redirect()->route('supplier.products.index')
-            ->with('success', 'Asset successfully deployed to catalog.');
+        return redirect()->route('supplier.products.index')->with('success', 'Asset successfully deployed to inventory.');
     }
 
     /**
-     * Show edit form.
+     * 4. EDIT: Shows the update form
      */
-    public function edit(Product $product) 
+    public function edit(Product $product)
     {
-        // Check ownership
-        $supplierId = Auth::user()->supplier_id ?? 1;
-        if ($product->supplier_id != $supplierId) {
-            abort(403, 'Unauthorized.');
+        if ($product->supplier_id !== Auth::user()->supplier_id) {
+            abort(403);
         }
 
-        $categories = Category::all();
+        $categories = Category::orderBy('name', 'asc')->get();
         return view('supplier.products.edit', compact('product', 'categories'));
     }
 
     /**
-     * Update existing asset.
+     * 5. UPDATE: Saves changes to existing products
      */
-    public function update(Request $request, Product $product) 
+    public function update(Request $request, Product $product)
     {
-        // 1. Check ownership (Safety first!)
-        $supplierId = Auth::user()->supplier_id ?? 1;
-        if ($product->supplier_id != $supplierId) {
-            abort(403, 'Unauthorized.');
+        if ($product->supplier_id !== Auth::user()->supplier_id) {
+            abort(403);
         }
 
-        // 2. Validation
-        // Note: Ensure category_id is actually sent by your form
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'unit' => 'required|string',
-            'status' => 'required|string', // Added because it's in your form
+            'status' => 'required|in:Active,Inactive',
             'product_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        // 3. Handle Image replacement
         if ($request->hasFile('product_image')) {
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
-            $validated['image_path'] = $request->file('product_image')->store('products', 'public');
+            $product->image_path = $request->file('product_image')->store('products', 'public');
         }
 
-        // 4. Update the record
-        $product->update($validated);
+        $product->update($request->except('product_image'));
 
-        return redirect()->route('supplier.products.index')
-            ->with('success', 'Asset updated.');
+        return redirect()->route('supplier.products.index')->with('success', 'Product information updated successfully.');
     }
+
     /**
-     * Delete asset.
+     * 6. DESTROY: Deletes the product and cleans up files
      */
-    public function destroy(Product $product) 
+    public function destroy(Product $product)
     {
+        // Security check
+        if ($product->supplier_id !== Auth::user()->supplier_id) {
+            abort(403);
+        }
+
+        // Delete image file from storage if it exists
         if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }
@@ -148,6 +145,6 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('supplier.products.index')
-            ->with('success', 'Asset removed.');
+            ->with('success', 'Asset decommissioned and removed from system.');
     }
 }

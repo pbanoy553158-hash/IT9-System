@@ -6,14 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // This creates the actual column in the database
-            $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('cascade');
+            if (!Schema::hasColumn('users', 'supplier_id')) {
+                $table->foreignId('supplier_id')
+                      ->nullable()
+                      ->after('id')
+                      ->constrained('suppliers')
+                      ->onDelete('cascade');
+            }
         });
     }
 

@@ -14,7 +14,8 @@ use Illuminate\Validation\Rules;
 class SupplierController extends Controller
 {
     /**
-     * Display supplier directory with delivered orders count
+     * Display supplier directory
+     * Shows correct delivered order count
      */
     public function index()
     {
@@ -50,13 +51,12 @@ class SupplierController extends Controller
         DB::beginTransaction();
 
         try {
-            // Create supplier
+
             $supplier = Supplier::create([
                 'name' => $request->name,
                 'email' => $request->email,
             ]);
 
-            // Create linked user
             User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -69,20 +69,20 @@ class SupplierController extends Controller
 
             return redirect()
                 ->route('admin.suppliers.index')
-                ->with('success', 'Supplier account created successfully.');
+                ->with('success', 'Supplier created successfully.');
 
         } catch (\Exception $e) {
 
             DB::rollBack();
 
             return back()
-                ->withErrors(['error' => 'Failed to create supplier account.'])
+                ->withErrors(['error' => 'Failed to create supplier.'])
                 ->withInput();
         }
     }
 
     /**
-     * Delete supplier + linked user
+     * Delete supplier + user
      */
     public function destroy(Supplier $supplier)
     {
@@ -91,6 +91,7 @@ class SupplierController extends Controller
         DB::beginTransaction();
 
         try {
+
             User::where('supplier_id', $supplier->id)->delete();
             $supplier->delete();
 
@@ -98,7 +99,7 @@ class SupplierController extends Controller
 
             return redirect()
                 ->route('admin.suppliers.index')
-                ->with('success', 'Supplier removed successfully.');
+                ->with('success', 'Supplier deleted successfully.');
 
         } catch (\Exception $e) {
 
@@ -110,13 +111,10 @@ class SupplierController extends Controller
         }
     }
 
-    /**
-     * Admin access protection
-     */
     private function authorizeAdmin()
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized access.');
+            abort(403);
         }
     }
 }

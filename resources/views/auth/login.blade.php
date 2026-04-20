@@ -1,62 +1,119 @@
 <x-guest-layout>
-    <div class="min-h-screen flex flex-col justify-center items-center bg-[#0a0b10] px-6 selection:bg-indigo-500/30">
-        
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-indigo-500/10 blur-[120px] rounded-full"></div>
-            <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 40px 40px;"></div>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    body {
+        background-color: #030406;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .ecosystem-spotlight {
+        background: radial-gradient(circle at 50% -20%, rgba(79, 70, 229, 0.15) 0%, transparent 50%);
+    }
+
+    .vault-card {
+        background: rgba(15, 17, 22, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .input-inset {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .input-inset:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+    }
+</style>
+
+<div class="min-h-screen ecosystem-spotlight flex items-center justify-center px-4">
+
+    <div class="login-container space-y-8">
+
+        {{-- LOGO --}}
+        <div class="flex flex-col items-center">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-xl shadow-2xl mb-4">
+                📦
+            </div>
+
+            <h1 class="text-xl font-extrabold text-white tracking-tight">
+                Supply<span class="text-indigo-500">Manager</span>
+            </h1>
+
+            <p class="text-slate-500 text-[10px] font-semibold mt-1 tracking-wide">
+                Command center access
+            </p>
         </div>
 
-        <div class="mb-10 text-center relative z-10">
-            <h2 class="text-3xl font-light text-white tracking-tight">Supply<span class="text-indigo-400 font-semibold">Manager</span></h2>
-            <p class="text-slate-400 text-xs mt-2 font-light tracking-wide">Enter your credentials to access the network.</p>
-        </div>
-
-        <div class="w-full max-w-[400px] bg-[#11131a]/80 border border-white/[0.1] p-10 rounded-[2rem] backdrop-blur-3xl shadow-2xl relative z-10">
-            
+        {{-- FORM --}}
+        <div class="vault-card rounded-[2rem] p-8 shadow-2xl">
             <form method="POST" action="{{ route('login') }}" class="space-y-6">
                 @csrf
 
-                <div>
-                    <label for="email" class="block text-sm font-medium text-slate-300 mb-2 ml-1">Email address</label>
-                    <input id="email" type="email" name="email" :value="old('email')" required autofocus 
-                        class="w-full bg-[#0a0b10]/50 border-white/10 rounded-xl text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder-slate-600 py-3.5 px-4 text-sm transition-all" 
-                        placeholder="admin@supplymanager.com">
-                    <x-input-error :messages="$errors->get('email')" class="mt-2 text-xs text-red-400" />
+                {{-- EMAIL --}}
+                <div class="space-y-2">
+                    <label class="block text-[11px] font-semibold text-slate-400 ml-1">
+                        Email address
+                    </label>
+
+                    <input type="email" name="email" value="{{ old('email') }}" required autofocus
+                        class="w-full rounded-xl px-4 py-3 text-white text-sm input-inset outline-none transition-all"
+                        placeholder="name@company.com">
                 </div>
 
-                <div>
-                    <div class="flex justify-between items-center mb-2 ml-1">
-                        <label for="password" class="block text-sm font-medium text-slate-300">Password</label>
+                {{-- PASSWORD --}}
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center ml-1">
+                        <label class="text-[11px] font-semibold text-slate-400">
+                            Password
+                        </label>
+
                         @if (Route::has('password.request'))
-                            <a class="text-xs text-indigo-400 hover:text-indigo-300 transition-colors" href="{{ route('password.request') }}">
+                            <a href="{{ route('password.request') }}"
+                               class="text-[9px] text-indigo-400 hover:text-indigo-300 leading-none">
                                 Forgot?
                             </a>
                         @endif
                     </div>
-                    <input id="password" type="password" name="password" required 
-                        class="w-full bg-[#0a0b10]/50 border-white/10 rounded-xl text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 py-3.5 px-4 text-sm transition-all"
+
+                    <input type="password" name="password" required
+                        class="w-full rounded-xl px-4 py-3 text-white text-sm input-inset outline-none transition-all"
                         placeholder="••••••••">
-                    <x-input-error :messages="$errors->get('password')" class="mt-2 text-xs text-red-400" />
                 </div>
 
-                <div class="flex items-center ml-1">
-                    <input id="remember_me" type="checkbox" name="remember" 
-                        class="rounded bg-white/5 border-white/10 text-indigo-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer">
-                    <span class="ms-3 text-sm text-slate-400 font-light">Stay logged in</span>
+                {{-- REMEMBER --}}
+                <div class="flex items-center px-1">
+                    <input type="checkbox" name="remember"
+                        class="rounded bg-white/5 border-white/10 text-indigo-600 w-4 h-4">
+
+                    <span class="ml-2 text-xs text-slate-500">
+                        Keep me signed in
+                    </span>
                 </div>
 
-                <div class="pt-2">
-                    <button type="submit" 
-                        class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-xl text-sm font-semibold transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] active:scale-[0.98]">
-                        Sign in to Dashboard
-                    </button>
-                </div>
+                {{-- BUTTON --}}
+                <button type="submit"
+                    class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold normal-case tracking-normal transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]">
+                    Authorize Access
+                </button>
+
             </form>
         </div>
 
-        <div class="mt-10 flex items-center gap-3 opacity-50">
-            <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(99,102,241,1)]"></div>
-            <p class="text-slate-500 text-[10px] font-medium tracking-widest uppercase">Secure Admin Access</p>
-        </div>
+        {{-- FOOTER --}}
+        <p class="text-center text-[10px] text-slate-600 font-medium tracking-wide">
+            Secure login • system v4.2
+        </p>
+
     </div>
+</div>
 </x-guest-layout>

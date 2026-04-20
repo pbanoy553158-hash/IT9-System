@@ -9,19 +9,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->foreignId('supplier_id')
-                  ->nullable()
-                  ->after('user_id')
-                  ->constrained('suppliers')
-                  ->onDelete('set null');
+            if (!Schema::hasColumn('orders', 'supplier_id')) {
+                $table->foreignId('supplier_id')
+                      ->nullable()
+                      ->after('user_id')
+                      ->constrained('suppliers')
+                      ->onDelete('set null');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropForeign(['supplier_id']);
-            $table->dropColumn('supplier_id');
+            if (Schema::hasColumn('orders', 'supplier_id')) {
+                $table->dropForeign(['supplier_id']);
+                $table->dropColumn('supplier_id');
+            }
         });
     }
 };

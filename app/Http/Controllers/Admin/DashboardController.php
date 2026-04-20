@@ -16,36 +16,32 @@ class DashboardController extends Controller
         $adminStats = [
             'total_suppliers'   => Supplier::count(),
             'active_orders'     => Order::whereIn('status', ['Processing','Pending','Shipped'])->count(),
-            'total_revenue'     => Order::where('status','Delivered')->sum('total_price'),
+            'total_revenue'     => Order::where('status','Delivered')->sum('total_amount'),
             'pending_approvals' => Order::where('status','Pending')->count(),
         ];
 
         // RECENT ACTIVITY
-        $recentActivity = Order::with('user')->latest()->take(6)->get();
+        $recentActivity = Order::with('user')
+            ->latest()
+            ->take(6)
+            ->get();
 
-        // 🔥 WEEKLY ORDERS (REAL DATA)
-        $startOfWeek = Carbon::now()->startOfWeek();
+        // 🔥 FIXED WEEKLY ORDERS (MON → SUN REAL ALIGNMENT)
+        $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY);
 
-        $weeklyOrdersRaw = Order::select(
-                DB::raw('DAYOFWEEK(created_at) as day'),
-                DB::raw('COUNT(*) as total')
-            )
-            ->whereBetween('created_at', [$startOfWeek, now()])
-            ->groupBy('day')
-            ->pluck('total','day');
-
-        // Map to MON-SUN
         $weeklyOrders = [];
-        for ($i = 2; $i <= 8; $i++) {
-            $dayIndex = $i == 8 ? 1 : $i;
-            $weeklyOrders[] = $weeklyOrdersRaw[$dayIndex] ?? 0;
+
+        for ($i = 0; $i < 7; $i++) {
+            $date = $startOfWeek->copy()->addDays($i);
+
+            $weeklyOrders[] = Order::whereDate('created_at', $date)->count();
         }
 
-        // 🔥 SYSTEM HEALTH
+        // 🔥 SYSTEM HEALTH (REAL DATA)
         $chartData = [
             Order::where('status','Delivered')->count(),
             Order::where('status','Pending')->count(),
-            Order::where('status','Cancelled')->count(),
+            Order::where('status','Rejected')->count(),
         ];
 
         return view('admin.dashboard', compact(

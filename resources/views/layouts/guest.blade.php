@@ -13,8 +13,15 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased bg-[#0f111a] text-slate-200">
-        <div class="min-h-screen border-t border-indigo-500/10">
-            {{ $slot }}
+
+        <div class="min-h-screen flex items-center justify-center px-4">
+
+            <!-- THIS FIXES THE WIDTH -->
+            <div class="w-full max-w-md">
+                {{ $slot }}
+            </div>
+
         </div>
+
     </body>
 </html>

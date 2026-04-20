@@ -54,7 +54,7 @@
                                     <div class="text-[10px] text-slate-500 mt-0.5 font-medium">Quantity: {{ $order->quantity }}</div>
                                 </td>
                                 <td class="px-8 py-6 text-sm font-semibold text-white">
-                                    ${{ number_format($order->total_amount, 2) }}
+                                    ₱{{ number_format($order->total_amount, 2) }}
                                 </td>
                                 <td class="px-8 py-6">
                                     @php
