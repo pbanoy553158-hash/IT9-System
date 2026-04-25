@@ -11,13 +11,18 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::where('user_id', Auth::id())->latest();
+        // Use with() to eager load items and their products to prevent N+1 issues
+        $query = Order::with(['items.product'])->where('user_id', Auth::id())->latest();
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
+                // Search in the orders table
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('product_name', 'like', "%{$search}%");
+                  // FIXED: Changed 'product' to 'products' to match your Model relationship
+                  ->orWhereHas('products', function($productQuery) use ($search) {
+                      $productQuery->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 

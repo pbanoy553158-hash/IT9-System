@@ -4,13 +4,24 @@
             
             <div class="mb-6">
                 <a href="{{ route('supplier.products.index') }}" 
-                   class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors duration-300">
+                class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                     Back to inventory
                 </a>
             </div>
+
+            {{-- ERROR ALERT: This will show you exactly why it didn't save --}}
+            @if ($errors->any())
+                <div class="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                    <ul class="list-disc list-inside text-xs text-red-400">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <div class="bg-[#0d0d12] border border-white/[0.05] rounded-[1.5rem] shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 blur-[80px] pointer-events-none"></div>
@@ -30,39 +41,56 @@
 
                         <div class="space-y-2">
                             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Product image</label>
-                            <div class="flex items-center gap-4 p-3 bg-white/[0.02] border border-white/5 rounded-xl">
-                                @if($product->image_path)
-                                    <img src="{{ asset('storage/' . $product->image_path) }}" 
-                                         class="w-14 h-14 object-cover rounded-lg border border-white/10 shadow-lg">
-                                @endif
-                                <div class="flex-1">
-                                    <input type="file" name="product_image" 
-                                           class="block w-full text-[10px] text-slate-500 
-                                           file:mr-3 file:py-1.5 file:px-3 
-                                           file:rounded-md file:border-0 
-                                           file:text-[9px] file:font-bold file:uppercase 
-                                           file:bg-indigo-500/10 file:text-indigo-400 
-                                           hover:file:bg-indigo-500/20 transition-all cursor-pointer">
+                            <div class="flex flex-col gap-4 p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                                <div class="flex items-center gap-4">
+                                    <div class="h-16 w-16 bg-black rounded-lg border border-white/10 overflow-hidden flex-shrink-0">
+                                        <img id="imagePreview" 
+                                             src="{{ $product->image_path ? asset('storage/' . $product->image_path) : '#' }}" 
+                                             class="{{ $product->image_path ? '' : 'hidden' }} w-full h-full object-cover">
+                                        <div id="placeholder" class="{{ $product->image_path ? 'hidden' : '' }} w-full h-full flex items-center justify-center text-[8px] text-slate-600 font-bold uppercase">No Image</div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="file" name="product_image" id="imageInput"
+                                            class="block w-full text-[10px] text-slate-500 
+                                            file:mr-3 file:py-1.5 file:px-3 
+                                            file:rounded-md file:border-0 
+                                            file:text-[9px] file:font-bold file:uppercase 
+                                            file:bg-indigo-500/10 file:text-indigo-400 
+                                            hover:file:bg-indigo-500/20 transition-all cursor-pointer">
+                                        <p class="mt-2 text-[9px] text-slate-600 uppercase font-medium">JPEG, PNG or JPG (Max 2MB)</p>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {{-- ADDED CATEGORY FIELD (This was the missing piece) --}}
+                        <div class="space-y-2">
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                            <select name="category_id" required class="w-full rounded-lg bg-[#0d0d12] border border-white/10 text-white px-4 py-2.5 text-sm focus:border-indigo-500/50 outline-none">
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}" {{ $product->category_id == $cat->id ? 'selected' : '' }}>
+                                        {{ $cat->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="space-y-2">
                             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Product name</label>
                             <input type="text" name="name" value="{{ old('name', $product->name) }}" required
-                                   class="w-full rounded-lg bg-white/[0.02] border border-white/10 text-white px-4 py-2.5 text-sm focus:border-indigo-500/50 focus:ring-0 outline-none transition-all">
+                                class="w-full rounded-lg bg-white/[0.02] border border-white/10 text-white px-4 py-2.5 text-sm focus:border-indigo-500/50 focus:ring-0 outline-none transition-all">
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Price (₱)</label>
                                 <input type="number" step="0.01" name="price" value="{{ old('price', $product->price) }}" required
-                                       class="w-full rounded-lg bg-white/[0.02] border border-white/10 text-white px-4 py-2.5 text-sm focus:border-indigo-500/50 outline-none">
+                                    class="w-full rounded-lg bg-white/[0.02] border border-white/10 text-white px-4 py-2.5 text-sm focus:border-indigo-500/50 outline-none">
                             </div>
                             <div class="space-y-2">
                                 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Stock</label>
                                 <input type="number" name="stock" value="{{ old('stock', $product->stock) }}" required
-                                       class="w-full rounded-lg bg-white/[0.02] border border-white/10 text-white px-4 py-2.5 text-sm focus:border-indigo-500/50 outline-none">
+                                    class="w-full rounded-lg bg-white/[0.02] border border-white/10 text-white px-4 py-2.5 text-sm focus:border-indigo-500/50 outline-none">
                             </div>
                         </div>
 
@@ -87,7 +115,7 @@
                         <div class="pt-6 flex items-center justify-between border-t border-white/5">
                             <a href="{{ route('supplier.products.index') }}" class="text-[11px] font-bold text-slate-500 hover:text-white uppercase tracking-tighter transition-colors">Cancel</a>
                             <button type="submit" 
-                                    class="px-8 py-3 bg-white text-black hover:bg-amber-500 hover:text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                                    class="px-8 py-3 bg-white text-black hover:bg-indigo-600 hover:text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
                                 Update Product
                             </button>
                         </div>
@@ -96,4 +124,17 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('imageInput').onchange = evt => {
+            const [file] = document.getElementById('imageInput').files;
+            if (file) {
+                const preview = document.getElementById('imagePreview');
+                const placeholder = document.getElementById('placeholder');
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+                if(placeholder) placeholder.classList.add('hidden');
+            }
+        }
+    </script>
 </x-app-layout>

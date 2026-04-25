@@ -17,6 +17,7 @@
                 </a>
             </div>
 
+            {{-- FILTER --}}
             <div class="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
                 <form method="GET" class="flex gap-3">
                     <select name="status"
@@ -45,7 +46,6 @@
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-
                         <thead class="text-[10px] text-slate-500 uppercase bg-white/5">
                             <tr>
                                 <th class="text-left px-6 py-3">Product</th>
@@ -56,39 +56,42 @@
                         </thead>
 
                         <tbody class="divide-y divide-white/5">
-
                             @forelse($orders as $order)
-
                                 @php
                                     $item = $order->items->first();
                                     $product = $item?->product;
+                                    $isInactive = $product && $product->status === 'Inactive';
                                 @endphp
 
                                 <tr class="hover:bg-white/5 transition">
-
                                     <td class="px-6 py-3">
                                         <div class="flex items-center gap-3">
-
-                                            <div class="h-12 w-12 rounded-lg overflow-hidden bg-black border border-white/10 flex-shrink-0">
+                                            {{-- IMAGE WITH INACTIVE INDICATOR --}}
+                                            <div class="h-12 w-12 rounded-lg overflow-hidden bg-black border border-white/10 flex-shrink-0 relative">
                                                 @if($product && $product->image_path)
+                                                    @if($isInactive)
+                                                        <div class="absolute inset-0 z-10 bg-red-600/40 flex items-center justify-center">
+                                                            <span class="text-[7px] font-black text-white uppercase tracking-tighter">Inactive</span>
+                                                        </div>
+                                                    @endif
                                                     <img src="{{ asset('storage/'.$product->image_path) }}"
-                                                         class="w-full h-full object-cover">
+                                                         class="w-full h-full object-cover {{ $isInactive ? 'grayscale opacity-50' : '' }}">
                                                 @else
-                                                    <div class="flex items-center justify-center h-full text-[9px] text-slate-600">
-                                                        No Img
-                                                    </div>
+                                                    <div class="flex items-center justify-center h-full text-[9px] text-slate-600">No Img</div>
                                                 @endif
                                             </div>
 
                                             <div class="min-w-0">
-                                                <div class="text-white font-semibold text-xs truncate">
+                                                <div class="text-white font-semibold text-xs truncate flex items-center gap-2">
                                                     {{ $product->name ?? 'Unknown Product' }}
+                                                    @if($isInactive)
+                                                        <span class="text-[8px] bg-red-500/20 text-red-400 px-1.5 rounded border border-red-500/30">DEACTIVATED</span>
+                                                    @endif
                                                 </div>
                                                 <div class="text-[10px] text-indigo-400 font-mono">
                                                     {{ $order->order_number }}
                                                 </div>
                                             </div>
-
                                         </div>
                                     </td>
 
@@ -114,15 +117,14 @@
                                             {{ $order->quantity }},
                                             {{ $order->total_amount }},
                                             @js($order->status),
-                                            @js($product->image_path ?? null)
+                                            @js($product->image_path ?? null),
+                                            @js($product->status ?? 'Active')
                                         )"
-                                            class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1 text-[10px] rounded-lg transition">
+                                        class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1 text-[10px] rounded-lg transition">
                                             View
                                         </button>
                                     </td>
-
                                 </tr>
-
                             @empty
                                 <tr>
                                     <td colspan="4" class="text-center py-16 text-slate-500 text-xs">
@@ -130,7 +132,6 @@
                                     </td>
                                 </tr>
                             @endforelse
-
                         </tbody>
                     </table>
                 </div>
@@ -138,24 +139,24 @@
                 <div class="p-4 border-t border-white/5">
                     {{ $orders->links() }}
                 </div>
-
             </div>
         </div>
     </div>
 
-    {{-- MODAL (SMALLER WIDTH FIX) --}}
+    {{-- MODAL --}}
     <div id="modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-
         <div class="bg-[#0b0b10] w-[420px] p-6 rounded-xl border border-white/10">
 
-            {{-- IMAGE --}}
-            <div class="flex justify-center mb-4">
-                <div class="h-64 w-64 bg-black border border-white/10 rounded-xl overflow-hidden shadow-lg">
+            <div class="flex justify-center mb-4 relative">
+                <div class="h-64 w-64 bg-black border border-white/10 rounded-xl overflow-hidden shadow-lg relative">
+                    {{-- MODAL INACTIVE OVERLAY --}}
+                    <div id="m_inactive_badge" class="hidden absolute inset-0 bg-red-900/60 z-10 flex flex-col items-center justify-center backdrop-blur-[1px]">
+                        <span class="bg-red-600 text-white text-[10px] px-3 py-1 rounded-full font-black uppercase shadow-xl">Product Deactivated</span>
+                    </div>
                     <img id="m_image" class="w-full h-full object-cover">
                 </div>
             </div>
 
-            {{-- INFO --}}
             <h2 id="m_name" class="text-white font-bold text-sm text-center"></h2>
 
             <div class="text-indigo-400 text-[11px] text-center mb-1">
@@ -180,12 +181,11 @@
                     Close
                 </button>
             </div>
-
         </div>
     </div>
 
     <script>
-        function openModal(name, order, qty, total, status, image) {
+        function openModal(name, order, qty, total, status, image, productStatus) {
             document.getElementById('modal').classList.remove('hidden');
 
             document.getElementById('m_name').innerText = name;
@@ -195,12 +195,21 @@
             document.getElementById('m_status').innerText = status;
 
             const img = document.getElementById('m_image');
+            const inactiveBadge = document.getElementById('m_inactive_badge');
+            
             img.src = image ? "/storage/" + image : "";
+
+            if (productStatus === 'Inactive') {
+                inactiveBadge.classList.remove('hidden');
+                img.classList.add('grayscale', 'opacity-50');
+            } else {
+                inactiveBadge.classList.add('hidden');
+                img.classList.remove('grayscale', 'opacity-50');
+            }
         }
 
         function closeModal() {
             document.getElementById('modal').classList.add('hidden');
         }
     </script>
-
 </x-app-layout>

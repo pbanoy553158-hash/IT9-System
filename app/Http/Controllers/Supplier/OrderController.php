@@ -7,7 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Activity; // ✅ REQUIRED
+use App\Models\Activity; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -104,9 +104,6 @@ class OrderController extends Controller
 
         session()->forget('cart');
 
-        // ==================================================
-        // 📌 ACTIVITY: ORDER CREATED
-        // ==================================================
         Activity::create([
             'user_id'     => Auth::id(),
             'type'        => 'order',
@@ -154,11 +151,6 @@ class OrderController extends Controller
         return back()->with('success', 'Added to cart.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | VIEW CART
-    |--------------------------------------------------------------------------
-    */
     public function cart()
     {
         return view('supplier.orders.cart', [
@@ -166,21 +158,11 @@ class OrderController extends Controller
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CHECKOUT (ALIAS)
-    |--------------------------------------------------------------------------
-    */
     public function checkout(Request $request)
     {
         return $this->store($request);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ADMIN VIEW ORDERS
-    |--------------------------------------------------------------------------
-    */
     public function adminIndex()
     {
         $orders = Order::with(['user', 'supplier', 'items.product'])
@@ -190,11 +172,6 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE STATUS
-    |--------------------------------------------------------------------------
-    */
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
@@ -205,9 +182,6 @@ class OrderController extends Controller
             'status' => $request->status
         ]);
 
-        // ==================================================
-        // 📌 ACTIVITY: STATUS UPDATED
-        // ==================================================
         Activity::create([
             'user_id'     => Auth::id(),
             'type'        => 'order',

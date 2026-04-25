@@ -15,25 +15,16 @@ class Supplier extends Model
         'email',
     ];
 
-    /**
-     * Linked users under this supplier
-     */
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'supplier_id');
     }
 
-    /**
-     * All orders belonging to supplier
-     */
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class, 'supplier_id');
     }
 
-    /**
-     * Only delivered orders (clean reusable relationship)
-     */
     public function deliveredOrders(): HasMany
     {
         return $this->hasMany(Order::class, 'supplier_id')

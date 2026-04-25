@@ -12,7 +12,7 @@ class Activity extends Model
 
     protected $fillable = [
         'user_id',
-        'type',        // order, product, profile, etc
+        'type',        
         'title',
         'description',
         'icon',

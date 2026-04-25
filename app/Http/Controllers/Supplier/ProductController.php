@@ -13,11 +13,6 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | INDEX
-    |--------------------------------------------------------------------------
-    */
     public function index(Request $request)
     {
         $query = Product::where('supplier_id', Auth::user()->supplier_id)
@@ -41,11 +36,6 @@ class ProductController extends Controller
         return view('supplier.products.index', compact('products', 'categories'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SHOW
-    |--------------------------------------------------------------------------
-    */
     public function show(Product $product)
     {
         if ($product->supplier_id !== Auth::user()->supplier_id) {
@@ -53,26 +43,15 @@ class ProductController extends Controller
         }
 
         $product->load('category');
-
         return view('supplier.products.show', compact('product'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE
-    |--------------------------------------------------------------------------
-    */
     public function create()
     {
         $categories = Category::orderBy('name')->get();
         return view('supplier.products.create', compact('categories'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STORE
-    |--------------------------------------------------------------------------
-    */
     public function store(Request $request)
     {
         $request->validate([
@@ -81,11 +60,10 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'unit' => 'required|string',
-            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
         ]);
 
         $imagePath = null;
-
         if ($request->hasFile('product_image')) {
             $imagePath = $request->file('product_image')->store('products', 'public');
         }
@@ -116,11 +94,6 @@ class ProductController extends Controller
             ->with('success', 'Asset successfully deployed to inventory.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT
-    |--------------------------------------------------------------------------
-    */
     public function edit(Product $product)
     {
         if ($product->supplier_id !== Auth::user()->supplier_id) {
@@ -128,15 +101,9 @@ class ProductController extends Controller
         }
 
         $categories = Category::orderBy('name')->get();
-
         return view('supplier.products.edit', compact('product', 'categories'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE
-    |--------------------------------------------------------------------------
-    */
     public function update(Request $request, Product $product)
     {
         if ($product->supplier_id !== Auth::user()->supplier_id) {
@@ -153,16 +120,22 @@ class ProductController extends Controller
             'product_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
+        // 1. Get all data except the image file
+        $updateData = $request->except('product_image');
+
+        // 2. Handle image upload if a new file is provided
         if ($request->hasFile('product_image')) {
+            // Delete old image
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
 
-            $product->image_path = $request->file('product_image')
-                ->store('products', 'public');
+            // Store new image and add it to the update array
+            $updateData['image_path'] = $request->file('product_image')->store('products', 'public');
         }
 
-        $product->update($request->except('product_image'));
+        // 3. Update everything at once
+        $product->update($updateData);
 
         Activity::create([
             'user_id'     => Auth::id(),

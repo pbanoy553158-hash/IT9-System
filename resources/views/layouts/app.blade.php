@@ -26,7 +26,6 @@
 
         .app-shell { display: flex; height: 100vh; width: 100vw; }
 
-        /* UPGRADED: Mesh Gradient Background */
         .main-content-area {
             background-color: #050508;
             background-image: 
@@ -36,7 +35,6 @@
             position: relative;
         }
 
-        /* UPGRADED: Frosted Sidebar */
         .sidebar-premium {
             background: rgba(13, 14, 20, 0.8);
             backdrop-filter: blur(12px);
@@ -59,7 +57,6 @@
             transform: translateX(4px);
         }
 
-        /* UPGRADED: Glow effect for active links */
         .nav-active {
             background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.03) 100%) !important;
             color: #c7d2fe !important;
@@ -76,7 +73,6 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 
-        /* UPGRADED: Pulsing Notification Dot */
         .notif-dot {
             position: absolute;
             top: 10px;
@@ -96,7 +92,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Card stylings for inside the $slot */
         .premium-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -113,23 +108,23 @@
 
     <div class="app-shell">
         
-        {{-- SIDEBAR --}}
         @php 
             $isAdmin = Auth::user()->role === 'admin'; 
             $sidebarWidth = $isAdmin ? 'w-72' : 'w-64'; 
+            $unreadNotifications = Auth::user()->unreadNotifications;
+            $allNotifications = Auth::user()->notifications()->take(10)->get();
         @endphp
 
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
                class="sidebar-premium {{ $sidebarWidth }} flex flex-col p-6 lg:p-8 fixed inset-y-0 left-0 lg:static lg:h-full">
 
             <div class="flex flex-col h-full">
-                {{-- Logo with enhanced glow --}}
-                <div class="mb-12 px-1 flex items-center gap-3 group cursor-default">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 via-violet-600 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.3)] group-hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all duration-500">
+                <div class="mb-12 px-1 flex items-center gap-3 group cursor-default shrink-0">
+                    <div class="w-10 h-10 min-w-[40px] flex-shrink-0 bg-gradient-to-br from-indigo-500 via-violet-600 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.3)] group-hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all duration-500">
                         <span class="text-xl">📦</span>
                     </div>
-                    <div>
-                        <h1 class="text-white font-bold text-[22px] tracking-tighter leading-none">
+                    <div class="flex-1">
+                        <h1 class="text-white font-bold text-[22px] tracking-tighter leading-none truncate">
                             Supply<span class="bg-gradient-to-r from-slate-400 to-slate-100 bg-clip-text text-transparent font-medium">Manager</span>
                         </h1>
                     </div>
@@ -186,11 +181,10 @@
                     </div>
                 </nav>
 
-                {{-- User Session Card - Modern Glass --}}
-                <div class="mt-auto pt-8">
+                <div class="mt-auto pt-8 shrink-0">
                     <div class="p-4 rounded-[24px] bg-gradient-to-b from-white/[0.05] to-transparent border border-white/10 shadow-2xl">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="relative">
+                            <div class="relative shrink-0">
                                 @if(Auth::user()->profile_photo_path)
                                     <img src="/storage/{{ Auth::user()->profile_photo_path }}" 
                                          class="w-10 h-10 rounded-xl object-cover ring-2 ring-indigo-500/20">
@@ -218,7 +212,6 @@
             </div>
         </aside>
 
-        {{-- MAIN CONTENT --}}
         <div class="flex-1 flex flex-col overflow-hidden main-content-area">
             
             <header class="h-20 flex items-center justify-between px-8 lg:px-12 glass-header shrink-0">
@@ -235,13 +228,11 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    {{-- Search bar - Optional aesthetic addition --}}
                     <div class="hidden md:flex items-center bg-white/[0.03] border border-white/5 rounded-2xl px-4 py-2 w-64 focus-within:border-indigo-500/50 transition-all">
                         <span class="text-slate-500 text-sm">🔍</span>
                         <input type="text" placeholder="Search anything..." class="bg-transparent border-none text-xs text-slate-300 focus:ring-0 w-full placeholder:text-slate-600">
                     </div>
 
-                    {{-- Bell Icon --}}
                     <button @click="notificationsOpen = !notificationsOpen" 
                             class="relative w-11 h-11 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:bg-white/[0.08] rounded-2xl group border border-transparent hover:border-white/10">
                         <svg xmlns="http://www.w3.org/2000/svg" 
@@ -251,12 +242,13 @@
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
-                        <span class="notif-dot"></span>
+                        @if($unreadNotifications->count() > 0)
+                            <span class="notif-dot"></span>
+                        @endif
                     </button>
 
                     <div class="h-8 w-[1px] bg-white/10 mx-2"></div>
 
-                    {{-- Profile Icon --}}
                     <a href="{{ route('profile.edit') }}" class="group flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl overflow-hidden border border-white/10 group-hover:border-indigo-500/50 transition-all shadow-lg">
                             @if(Auth::user()->profile_photo_path)
@@ -279,7 +271,6 @@
         </div>
     </div>
 
-    {{-- Notification Panel --}}
     <div x-show="notificationsOpen" 
          @click.away="notificationsOpen = false"
          x-cloak
@@ -290,39 +281,55 @@
 
         <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
             <span class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Notifications</span>
-            <span class="bg-indigo-500/20 text-indigo-400 text-[10px] px-2 py-0.5 rounded-full font-bold">2 New</span>
+            <span class="bg-indigo-500/20 text-indigo-400 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                {{ $unreadNotifications->count() }} New
+            </span>
         </div>
         
         <div class="max-h-[380px] overflow-y-auto custom-scrollbar p-3 space-y-2">
-            <div class="p-4 rounded-2xl hover:bg-white/[0.04] transition-all cursor-pointer border border-transparent hover:border-white/5">
-                <div class="flex gap-3">
-                    <div class="w-2 h-2 mt-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]"></div>
-                    <div class="flex-1">
-                        <p class="text-sm font-bold text-white">Your catalog is live</p>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">System has synced your latest inventory updates.</p>
-                        <p class="text-[10px] text-slate-600 mt-3 font-medium">Just now</p>
+            @forelse($allNotifications as $notification)
+                <div class="p-4 rounded-2xl {{ $notification->unread() ? 'bg-white/[0.04]' : 'opacity-60' }} hover:bg-white/[0.08] transition-all cursor-pointer border border-transparent hover:border-white/5">
+                    <div class="flex gap-3">
+                        @if($notification->unread())
+                            <div class="w-2 h-2 mt-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1] shrink-0"></div>
+                        @else
+                            <div class="w-2 h-2 mt-1.5 rounded-full bg-slate-700 shrink-0"></div>
+                        @endif
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-white">{{ $notification->data['title'] ?? 'Notification' }}</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                {{ $notification->data['message'] ?? 'You have a new update.' }}
+                            </p>
+                            <p class="text-[10px] text-slate-600 mt-3 font-medium">
+                                {{ $notification->created_at->diffForHumans() }}
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="p-4 rounded-2xl hover:bg-white/[0.04] transition-all cursor-pointer border border-transparent hover:border-white/5">
-                <div class="flex gap-3">
-                    <div class="w-2 h-2 mt-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]"></div>
-                    <div class="flex-1">
-                        <p class="text-sm font-bold text-white">New order #ORD-3921</p>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">12 items awaiting processing.</p>
-                        <p class="text-[10px] text-slate-600 mt-3 font-medium">2 hours ago</p>
-                    </div>
+            @empty
+                <div class="p-8 text-center">
+                    <p class="text-slate-500 text-xs italic">No notifications yet.</p>
                 </div>
-            </div>
+            @endforelse
         </div>
 
-        <div class="p-4 border-t border-white/5 bg-white/[0.02]">
-            <button @click="notificationsOpen = false"
-                    class="w-full py-3 text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl transition-all">
-                Clear all notifications
-            </button>
-        </div>
+        @if($unreadNotifications->count() > 0)
+            <div class="p-4 border-t border-white/5 bg-white/[0.02]">
+                <form method="POST" action="{{ route('notifications.mark-all-read') }}">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="w-full py-3 text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl transition-all">
+                        Mark all as read
+                    </button>
+                </form>
+            </div>
+        @else
+            <div class="p-4 border-t border-white/5 bg-white/[0.02]">
+                <button @click="notificationsOpen = false" class="w-full py-3 text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl transition-all">
+                    Close
+                </button>
+            </div>
+        @endif
     </div>
 </body>
 </html>

@@ -16,8 +16,8 @@
                 {{-- HEADER --}}
                 <div class="p-4 border-b border-white/5 flex justify-between items-center">
                     <div class="text-white font-bold text-sm">Recent Invoices</div>
-                    <form method="GET" class="relative group">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search invoice #..." 
+                    <form method="GET" action="{{ route('supplier.invoices.index') }}" class="relative group">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search invoice or product..." 
                             class="bg-[#0b0b10] border border-white/10 rounded-xl px-4 py-1.5 text-[11px] text-white outline-none focus:border-indigo-500/50 transition-all">
                     </form>
                 </div>
@@ -42,7 +42,10 @@
                                     INV-{{ $order->order_number }}
                                 </td>
                                 <td class="px-6 py-3">
-                                    <div class="text-white font-semibold text-xs truncate">{{ $order->product_name }}</div>
+                                    {{-- FIXED: Accessing name via relationship --}}
+                                    <div class="text-white font-semibold text-xs truncate">
+                                        {{ $order->product->name ?? 'N/A' }}
+                                    </div>
                                     <div class="text-[10px] text-slate-500">{{ $order->quantity }} Units</div>
                                 </td>
                                 <td class="px-6 py-3 text-center text-white font-bold text-xs">
@@ -75,8 +78,8 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-                            @if($orders->hasPages())
+
+                @if($orders->hasPages())
                 <div class="px-6 py-4 border-t border-white/5 bg-white/[0.01]">
                     {{ $orders->appends(request()->query())->links() }}
                 </div>

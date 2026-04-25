@@ -115,7 +115,6 @@
         </div>
     </div>
 
-    {{-- Script for Image Preview --}}
     <script>
         function previewImage(input) {
             const container = document.getElementById('image-preview-container');

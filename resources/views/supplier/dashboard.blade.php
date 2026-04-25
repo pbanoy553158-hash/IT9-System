@@ -7,9 +7,10 @@
         <div class="lg:col-span-8 bg-[#1e1b2e] border border-white/10 rounded-[2rem] p-6">
 
             <h2 class="text-xl font-bold text-white">Supplier Orders</h2>
+
             <p class="text-slate-500 text-xs">Track system activities in real time</p>
 
-            <div class="mt-4">
+            <div class="mt-4 flex justify-end">
                 <h1 class="text-4xl font-extrabold text-white">
                     {{ $stats['total'] }}
                 </h1>
@@ -26,7 +27,7 @@
             </div>
 
             <a href="{{ route('supplier.orders.create') }}"
-               class="mt-6 bg-white text-indigo-900 text-[10px] font-bold py-3 rounded-xl text-center uppercase">
+               class="mt-6 bg-white text-indigo-900 text-[10px] font-bold py-3 rounded-xl text-center">
                 Create Entry
             </a>
 
@@ -39,8 +40,22 @@
         {{-- SMALLER ACTIVITY TABLE --}}
         <div class="lg:col-span-8 bg-[#1e1b2e] border border-white/10 rounded-[1.2rem] overflow-hidden">
 
-            <div class="px-4 py-3 border-b border-white/5">
+            <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+
                 <h3 class="text-white text-sm font-bold">Recent Activity</h3>
+
+                {{-- CLEAN BUTTON --}}
+                <form method="POST" action="{{ route('admin.activity.clear') }}"
+                      onsubmit="return confirm('Clear activity log?')">
+                    @csrf
+                    @method('DELETE')
+
+                    <button type="submit"
+                        class="text-red-500 text-[10px] font-normal hover:text-red-400 transition">
+                        Clear Activity
+                    </button>
+                </form>
+
             </div>
 
             <div class="overflow-x-auto">
@@ -49,8 +64,7 @@
                     <thead>
                         <tr class="text-slate-500 uppercase text-[9px] border-b border-white/5">
                             <th class="px-4 py-2 text-left">Activity</th>
-                            <th class="px-4 py-2 text-center">Status</th>
-                            <th class="px-4 py-2 text-right">Amount</th>
+                            <th class="px-4 py-2 text-right">Date</th>
                         </tr>
                     </thead>
 
@@ -60,11 +74,9 @@
 
                         <tr class="hover:bg-white/5">
 
-                            {{-- ACTIVITY --}}
                             <td class="px-4 py-2">
                                 <div class="flex items-center gap-3">
 
-                                    {{-- IMAGE --}}
                                     <div class="w-9 h-9 rounded-lg overflow-hidden bg-black flex-shrink-0">
                                         @if($activity->image)
                                             <img src="{{ asset('storage/'.$activity->image) }}"
@@ -84,23 +96,15 @@
                                 </div>
                             </td>
 
-                            {{-- STATUS --}}
-                            <td class="text-center px-4 py-2">
-                                <span class="text-[9px] px-2 py-1 rounded bg-white/10 text-white">
-                                    {{ $activity->status ?? '-' }}
-                                </span>
-                            </td>
-
-                            {{-- AMOUNT --}}
-                            <td class="text-right px-4 py-2 text-white font-bold text-xs">
-                                ₱{{ number_format($activity->amount ?? 0, 2) }}
+                            <td class="text-right px-4 py-2 text-slate-400 text-[10px] font-medium">
+                                {{ $activity->created_at->format('M d, Y') }}
                             </td>
 
                         </tr>
 
                         @empty
                         <tr>
-                            <td colspan="3" class="text-center py-6 text-slate-500 text-xs">
+                            <td colspan="2" class="text-center py-6 text-slate-500 text-xs">
                                 No activity yet
                             </td>
                         </tr>
@@ -113,7 +117,6 @@
 
         </div>
 
-        {{-- SIDEBAR --}}
         <div class="lg:col-span-4 space-y-3">
 
             <div class="bg-[#1e1b2e] border border-white/10 rounded-2xl p-4 flex gap-3 items-center">

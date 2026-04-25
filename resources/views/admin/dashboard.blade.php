@@ -13,7 +13,7 @@
     @php
         $stats = $adminStats ?? [];
         $weekly = array_values($weeklyOrders ?? [0,0,0,0,0,0,0]);
-        $chart = array_values($chartData ?? [0,0,0]); // Assuming: [Success/Active, Pending/Warning, Failed/Critical]
+        $chart = array_values($chartData ?? [0,0,0]);
     @endphp
 
     <style>
@@ -64,20 +64,30 @@
                     <div class="absolute -top-12 -right-12 w-32 h-32 blur-[50px] opacity-20 group-hover:opacity-40 transition-opacity"
                          style="background-color: {{ $card['color'] }}"></div>
 
-                    <div class="relative z-10 flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">
-                                {{ $card['label'] }}
-                            </p>
+                    <div class="relative z-10">
+
+                        {{-- LABEL --}}
+                        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">
+                            {{ $card['label'] }}
+                        </p>
+
+                        {{-- ICON + VALUE ROW (FIXED ALIGNMENT) --}}
+                        <div class="flex items-center justify-between mt-4">
+
+                            {{-- ICON LEFT --}}
+                            <div class="p-3 rounded-2xl bg-[#0d0b1a] border border-white/5 text-white/50 group-hover:text-white transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $card['icon'] }}" />
+                                </svg>
+                            </div>
+
+                            {{-- VALUE RIGHT --}}
                             <h3 class="text-4xl font-black text-white mt-3 tracking-tighter">
                                 {{ number_format($card['val']) }}
                             </h3>
+
                         </div>
-                        <div class="p-3 rounded-2xl bg-[#0d0b1a] border border-white/5 text-white/50 group-hover:text-white transition-all">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $card['icon'] }}" />
-                            </svg>
-                        </div>
+
                     </div>
                 </div>
             @endforeach
@@ -85,7 +95,7 @@
 
         {{-- CHARTS SECTION --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {{-- WEEKLY FLOW --}}
+
             <div class="lg:col-span-2 glass-card rounded-[2.5rem] p-8">
                 <div class="flex items-center justify-between mb-8">
                     <h3 class="text-white font-bold text-lg tracking-tight">Weekly Orders Flow</h3>
@@ -99,10 +109,9 @@
                 </div>
             </div>
 
-            {{-- SYSTEM HEALTH WITH INDICATORS --}}
             <div class="glass-card rounded-[2.5rem] p-8 flex flex-col items-center">
                 <h3 class="text-white font-bold text-lg mb-4 tracking-tight">System Health</h3>
-                
+
                 <div class="relative w-52 h-52 flex items-center justify-center mb-6">
                     <canvas id="statusChart"></canvas>
                     <div class="absolute text-center">
@@ -113,15 +122,15 @@
                     </div>
                 </div>
 
-                {{-- Legend / Indicators --}}
                 <div class="w-full space-y-3 px-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></span>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Success</span>
                         </div>
                         <span class="text-[10px] font-mono text-white/50 font-bold">{{ $chart[0] ?? 0 }}</span>
                     </div>
+
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -129,6 +138,7 @@
                         </div>
                         <span class="text-[10px] font-mono text-white/50 font-bold">{{ $chart[1] ?? 0 }}</span>
                     </div>
+
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-rose-500"></span>
@@ -138,6 +148,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
 
         {{-- RECENT ACTIVITY --}}
@@ -151,7 +162,9 @@
                 <form method="POST" action="{{ route('admin.activity.clear') }}" onsubmit="return confirm('Clear activity log?')">
                     @csrf @method('DELETE')
                     <button type="submit" class="text-xs font-medium text-rose-500/80 hover:text-rose-400 transition-colors flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                         clear activity
                     </button>
                 </form>
@@ -191,11 +204,12 @@
                 @endforelse
             </div>
         </div>
+
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Velocity Line Chart
+
             new Chart(document.getElementById('velocityChart'), {
                 type: 'line',
                 data: {
@@ -203,14 +217,6 @@
                     datasets: [{
                         data: @json($weekly),
                         borderColor: '#5046e5',
-                        backgroundColor: (context) => {
-                            const {ctx, chartArea} = context.chart;
-                            if (!chartArea) return null;
-                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                            gradient.addColorStop(0, 'transparent');
-                            gradient.addColorStop(1, 'rgba(80,70,229,0.15)');
-                            return gradient;
-                        },
                         fill: true,
                         tension: 0.45,
                         borderWidth: 4,
@@ -223,20 +229,18 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         y: { display: false },
-                        x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 10, weight: 'bold' } } }
+                        x: { grid: { display: false } }
                     }
                 }
             });
 
-            // Status Doughnut Chart
             new Chart(document.getElementById('statusChart'), {
                 type: 'doughnut',
                 data: {
                     datasets: [{
                         data: @json($chart),
                         backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                        borderWidth: 0,
-                        hoverOffset: 12
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -244,6 +248,7 @@
                     plugins: { legend: { display: false } }
                 }
             });
+
         });
     </script>
 </x-app-layout>
