@@ -42,7 +42,7 @@ RUN printf "<Directory /var/www/html/public>\n\
  && a2enconf laravel
 
 # =========================
-# NODEJS FOR VITE BUILD
+# NODEJS (FOR VITE)
 # =========================
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get install -y nodejs
@@ -55,21 +55,27 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # =========================
-# COPY PROJECT
+# COPY ONLY DEPENDENCY FILES FIRST (FIXES npm run build ERROR)
+# =========================
+COPY package*.json ./
+
+RUN npm install
+
+# =========================
+# COPY FULL PROJECT
 # =========================
 COPY . .
 
 # =========================
-# INSTALL PHP DEPENDENCIES
+# PHP DEPENDENCIES
 # =========================
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # =========================
-# NODE BUILD (FIXED FOR VITE)
+# VITE BUILD (FIXED)
 # =========================
 ENV NODE_ENV=production
 
-RUN npm install
 RUN npm run build
 
 # =========================
@@ -81,14 +87,14 @@ RUN php artisan key:generate --force || true \
  && php artisan route:cache || true
 
 # =========================
-# STORAGE + CACHE PERMISSIONS
+# PERMISSIONS
 # =========================
-RUN mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache public/uploads \
+RUN mkdir -p storage bootstrap/cache public/uploads \
  && chown -R www-data:www-data storage bootstrap/cache public/uploads \
  && chmod -R 775 storage bootstrap/cache public/uploads
 
 # =========================
-# EXPOSE PORT FOR RENDER
+# EXPOSE PORT
 # =========================
 EXPOSE 10000
 
