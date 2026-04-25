@@ -1,8 +1,6 @@
 FROM php:8.4-apache
 
-# =========================
-# SYSTEM DEPENDENCIES
-# =========================
+# Install system packages and PHP extensions
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -13,89 +11,66 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libpng-dev \
     zip \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip mbstring xml \
+    && docker-php-ext-install \
+        pdo \
+        pdo_mysql \
+        pdo_pgsql \
+        zip \
+        mbstring \
+        xml \
+        fileinfo \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# =========================
-# ENABLE APACHE REWRITE
-# =========================
+# Enable Apache rewrite
 RUN a2enmod rewrite
 
-# =========================
-# RENDER PORT CONFIG
-# =========================
+# Render port fix
 RUN sed -i 's/Listen 80/Listen 10000/g' /etc/apache2/ports.conf \
- && sed -i 's/<VirtualHost \*:80>/<VirtualHost *:10000>/g' /etc/apache2/sites-available/000-default.conf
+&& sed -i 's/<VirtualHost \*:80>/<VirtualHost *:10000>/g' /etc/apache2/sites-available/000-default.conf
 
-# =========================
-# SET LARAVEL PUBLIC FOLDER
-# =========================
+# Laravel public root
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
- && sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
+&& sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
 
 # Allow .htaccess
-RUN printf "<Directory /var/www/html/public>\n\
+RUN printf '<Directory /var/www/html/public>\n\
     AllowOverride All\n\
     Require all granted\n\
-</Directory>\n" > /etc/apache2/conf-available/laravel.conf \
- && a2enconf laravel
+</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
+&& a2enconf laravel
 
-# =========================
-# NODEJS (FOR VITE)
-# =========================
+# Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
- && apt-get install -y nodejs
+&& apt-get install -y nodejs
 
-# =========================
-# COMPOSER
-# =========================
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# =========================
-# COPY ONLY DEPENDENCY FILES FIRST (FIXES npm run build ERROR)
-# =========================
-COPY package*.json ./
-
-RUN npm install
-
-# =========================
-# COPY FULL PROJECT
-# =========================
 COPY . .
 
-# =========================
-# PHP DEPENDENCIES
-# =========================
+# Install backend dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# =========================
-# VITE BUILD (FIXED)
-# =========================
-ENV NODE_ENV=production
-
+# Install frontend dependencies
+RUN npm install
 RUN npm run build
 
-# =========================
-# LARAVEL SETUP
-# =========================
-RUN php artisan key:generate --force || true \
- && php artisan storage:link || true \
- && php artisan config:cache || true \
- && php artisan route:cache || true
+# Laravel optimizations (IMPORTANT FIX)
+RUN php artisan config:cache \
+&& php artisan route:cache \
+&& php artisan view:cache || true
 
-# =========================
-# PERMISSIONS
-# =========================
-RUN mkdir -p storage bootstrap/cache public/uploads \
- && chown -R www-data:www-data storage bootstrap/cache public/uploads \
- && chmod -R 775 storage bootstrap/cache public/uploads
+# Storage link
+RUN php artisan storage:link || true
 
-# =========================
-# EXPOSE PORT
-# =========================
+# Permissions
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache public/uploads \
+&& chown -R www-data:www-data storage bootstrap/cache public/uploads \
+&& chmod -R 775 storage bootstrap/cache public/uploads
+
 EXPOSE 10000
 
 CMD ["apache2-foreground"]
