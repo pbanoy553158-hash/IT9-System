@@ -69,7 +69,7 @@ Route::middleware('auth')->group(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | SUPPLIERS (Fixed with Edit/Update Routes)
+        | SUPPLIERS
         |--------------------------------------------------------------------------
         */
         Route::get('/suppliers', [SupplierController::class, 'index'])
@@ -111,7 +111,7 @@ Route::middleware('auth')->group(function () {
             ->name('orders.index');
 
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
-            ->name('orders.updateStatus');
+            ->name('orders.update-status');
     });
 
     /*

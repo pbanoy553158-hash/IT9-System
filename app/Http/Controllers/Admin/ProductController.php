@@ -15,11 +15,14 @@ class ProductController extends Controller
     {
         $query = Product::with(['supplier', 'category']);
 
+        // Handle status filtering
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
-        $products = $query->latest()->paginate(15);
+        // Updated pagination to 10 to match your UI request
+        $products = $query->latest()->paginate(10);
+        
         return view('admin.products.index', compact('products'));
     }
 
@@ -42,17 +45,18 @@ class ProductController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $data = $request->all();
+        $data = $request->except('image'); // Clean data collection
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('products', 'public');
         }
 
+        // Default status for admin-created products
         $data['status'] = 'Active';
 
         Product::create($data);
 
-        return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
+        return redirect()->route('admin.products.index')->with('success', 'Asset successfully logged into network.');
     }
 
     public function show(Product $product)
@@ -64,13 +68,13 @@ class ProductController extends Controller
     public function approve(Product $product)
     {
         $product->update(['status' => 'Active']);
-        return back()->with('success', "{$product->name} has been approved.");
+        return back()->with('success', "Asset {$product->sku} authorization granted.");
     }
 
     public function reject(Product $product)
     {
         $product->update(['status' => 'Rejected']);
-        return back()->with('error', "{$product->name} has been rejected.");
+        return back()->with('error', "Asset {$product->sku} has been flagged and rejected.");
     }
 
     public function destroy(Product $product)
@@ -80,6 +84,6 @@ class ProductController extends Controller
         }
         
         $product->delete();
-        return redirect()->route('admin.products.index')->with('success', 'Product removed.');
+        return redirect()->route('admin.products.index')->with('success', 'Asset record purged from buffer.');
     }
 }

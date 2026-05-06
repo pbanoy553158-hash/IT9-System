@@ -13,12 +13,19 @@ use Illuminate\Validation\Rules;
 
 class SupplierController extends Controller
 {
+    /**
+     * Display a listing of the suppliers with pagination.
+     */
     public function index()
     {
         $this->authorizeAdmin();
 
         $suppliers = Supplier::query()
             ->select('suppliers.*')
+            /** 
+             * Subquery to count only delivered orders. 
+             * This avoids loading all orders into memory.
+             */
             ->selectSub(function ($query) {
                 $query->from('orders')
                     ->selectRaw('COUNT(*)')
@@ -26,11 +33,14 @@ class SupplierController extends Controller
                     ->whereRaw('LOWER(TRIM(status)) = ?', ['delivered']);
             }, 'orders_count')
             ->latest()
-            ->get();
+            ->paginate(6); // Updated to 6 items per page
 
         return view('admin.suppliers.index', compact('suppliers'));
     }
 
+    /**
+     * Store a newly created supplier and associated user account.
+     */
     public function store(Request $request)
     {
         $this->authorizeAdmin();
@@ -44,12 +54,13 @@ class SupplierController extends Controller
         DB::beginTransaction();
 
         try {
-
+            // 1. Create the Supplier profile
             $supplier = Supplier::create([
                 'name' => $request->name,
                 'email' => $request->email,
             ]);
 
+            // 2. Create the User account linked to the supplier
             User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -65,15 +76,17 @@ class SupplierController extends Controller
                 ->with('success', 'Supplier created successfully.');
 
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             return back()
-                ->withErrors(['error' => 'Failed to create supplier.'])
+                ->withErrors(['error' => 'Failed to create supplier. Internal error: ' . $e->getMessage()])
                 ->withInput();
         }
     }
 
+    /**
+     * Remove the specified supplier and their associated user account.
+     */
     public function destroy(Supplier $supplier)
     {
         $this->authorizeAdmin();
@@ -81,7 +94,10 @@ class SupplierController extends Controller
         DB::beginTransaction();
 
         try {
-
+            /**
+             * We remove the associated user record first to maintain 
+             * referential integrity before deleting the supplier.
+             */
             User::where('supplier_id', $supplier->id)->delete();
             $supplier->delete();
 
@@ -89,22 +105,24 @@ class SupplierController extends Controller
 
             return redirect()
                 ->route('admin.suppliers.index')
-                ->with('success', 'Supplier deleted successfully.');
+                ->with('success', 'Supplier and associated user account deleted successfully.');
 
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             return back()->withErrors([
-                'error' => 'Unable to delete supplier.'
+                'error' => 'Unable to delete supplier. Check for active order dependencies.'
             ]);
         }
     }
 
+    /**
+     * Simple role-based authorization check.
+     */
     private function authorizeAdmin()
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
-            abort(403);
+            abort(403, 'Unauthorized access.');
         }
     }
 }

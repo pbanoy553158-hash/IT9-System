@@ -45,6 +45,39 @@
         .row-glow:hover {
             background: linear-gradient(90deg, rgba(80, 70, 229, 0.04) 0%, transparent 100%);
         }
+
+        /* --- STYLED PAGINATION --- */
+        .pg-container nav { display: flex; gap: 6px; align-items: center; }
+        
+        .pg-container nav a, 
+        .pg-container nav span[aria-current="page"] span,
+        .pg-container nav span[aria-disabled="true"] span {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #94a3b8 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            transition: all 0.2s !important;
+            text-decoration: none !important;
+        }
+
+        .pg-container nav a:hover {
+            border-color: #5046e5 !important;
+            color: #5046e5 !important;
+            background: rgba(80, 70, 229, 0.1) !important;
+        }
+
+        .pg-container nav span[aria-current="page"] span {
+            background: #5046e5 !important;
+            border-color: #5046e5 !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(80, 70, 229, 0.3);
+        }
+
+        .pg-container svg { width: 14px !important; height: 14px !important; }
+        .pg-container nav div:first-child { display: none !important; }
     </style>
 
     <div class="py-10 space-y-8 max-w-[1400px] mx-auto px-4">
@@ -79,7 +112,6 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-
                         <tr class="text-[12px] text-slate-500 border-b border-white/5 bg-white/[0.01] font-medium">
                             <th class="px-7 py-5">Asset Identification</th>
                             <th class="px-7 py-5">Supplier Node</th>
@@ -101,8 +133,12 @@
                                         @endif
                                     </div>
                                     <div>
-                                        <div class="text-sm font-normal text-white group-hover:text-[#5046e5] transition-colors leading-tight mb-0.5">{{ $product->name }}</div>
-                                        <div class="text-[11px] font-mono text-[#5046e5]/80 tracking-normal font-semibold">{{ $product->sku }}</div>
+                                        <div class="text-[13px] font-medium text-white group-hover:text-[#5046e5] transition-colors leading-tight mb-0.5">
+                                            {{ $product->name }}
+                                        </div>
+                                        <div class="text-[10px] font-mono text-[#5046e5]/80 tracking-normal font-semibold uppercase">
+                                            {{ $product->sku }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -111,7 +147,6 @@
                                 <div class="text-[10px] text-slate-500 mt-0.5 italic">{{ $product->category->name ?? 'Uncategorized' }}</div>
                             </td>
                             <td class="px-7 py-5 text-center">
-
                                 <div class="text-xs font-semibold text-emerald-400 tracking-tight">₱{{ number_format($product->price, 2) }}</div>
                                 <div class="text-[10px] mt-0.5 {{ $product->stock < 10 ? 'text-rose-500 font-bold' : 'text-slate-500' }}">Stock: {{ $product->stock }}</div>
                             </td>
@@ -162,16 +197,15 @@
                 </table>
             </div>
             
-            @if($products->hasPages())
-                <div class="px-7 py-5 bg-white/[0.01] border-t border-white/5 flex items-center justify-between">
-                    <div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
-                        Node Capacity: {{ $products->total() }} Units
-                    </div>
-                    <div class="pagination-custom text-[10px]">
-                        {{ $products->links() }}
-                    </div>
+            {{-- Footer / Pagination Section --}}
+            <div class="px-7 py-5 bg-white/[0.01] border-t border-white/5 flex items-center justify-between">
+                <div class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                    Node Capacity: {{ $products->total() }} Units
                 </div>
-            @endif
+                <div class="pg-container">
+                    {{ $products->links() }}
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>
